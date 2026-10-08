@@ -18,7 +18,10 @@
   },
   "homepage": "https://github.com/Karendiaz23/SistemasTickets-Kdiaz#readme",
   "dependencies": {
+    "cors": "^2.8.6",
     "express": "^5.2.1",
+    "node-cron": "^4.6.0",
+    "pocketbase": "^0.28.1",
     "sqlite3": "^6.0.1"
   }
 }

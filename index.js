@@ -1,22 +1,50 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
+const cors = require('cors');
+const path = require('path');
+
 const app = express();
 const PORT = 3000;
 
-// Conectar/crear la base de datos SQLite
-const db = new sqlite3.Database('./tickets.db', (err) => {
-  if (err) console.error('Error al conectar con SQLite:', err.message);
-  else console.log('Base de Datos SQLite conectada correctamente.');
+// Capturar errores no controlados para que el servidor NO muera en silencio
+process.on('uncaughtException', (err) => {
+  console.error('💥 Error No Controlado:', err);
 });
 
-// Crear tabla si no existe
-db.run(`
-  CREATE TABLE IF NOT EXISTS tickets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cae TEXT UNIQUE NOT NULL,
-    fecha DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 Promesa rechazada no controlada:', reason);
+});
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Servir archivos estáticos del frontend desde la carpeta "public"
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Conectar/crear la base de datos SQLite
+const db = new sqlite3.Database('./tickets.db', (err) => {
+  if (err) {
+    console.error('❌ Error crítico al conectar con SQLite:', err.message);
+  } else {
+    console.log('✅ Base de Datos SQLite conectada correctamente.');
+    crearTablas();
+  }
+});
+
+// Función para inicializar tablas
+function crearTablas() {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tickets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cae TEXT UNIQUE NOT NULL,
+      fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) console.error('❌ Error al crear la tabla:', err.message);
+    else console.log('✅ Tabla "tickets" verificada/creada.');
+  });
+}
 
 // Función para extraer el CAE de la URL de ARCA
 function obtenerCAE(url) {
@@ -43,7 +71,7 @@ function obtenerCAE(url) {
   return null;
 }
 
-// Ruta de validación para la ESP32
+// Ruta de validación para la ESP32 / QR
 app.get('/validar', (req, res) => {
   const urlQr = req.query.url;
   const esConfirmacion = req.query.entregar === 'true';
@@ -104,7 +132,7 @@ app.get('/validar', (req, res) => {
   });
 });
 
-// Ruta para historial
+// Ruta para historial (usada por el panel frontend)
 app.get('/historial', (req, res) => {
   db.all('SELECT * FROM tickets ORDER BY fecha DESC', [], (err, filas) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -112,9 +140,17 @@ app.get('/historial', (req, res) => {
   });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+// Iniciar servidor con manejo de errores de puerto
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`==============================================`);
-  console.log(` Servidor API activo en el puerto ${PORT}`);
+  console.log(` Servidor API activo en http://localhost:${PORT}`);
   console.log(`==============================================`);
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Error: El puerto ${PORT} ya está siendo utilizado por otro proceso.`);
+  } else {
+    console.error('❌ Error al iniciar el servidor:', err.message);
+  }
+});

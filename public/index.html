@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Mostaza - Panel de Tickets en Vivo (API Real)</title>
+   <!-- Tailwind CSS CDN -->
+   <script src="https://cdn.tailwindcss.com"></script>
+   <!-- Google Fonts: Montserrat & Inter -->
+   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+   <!-- FontAwesome Icons -->
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+   <script>
+       tailwind.config = {
+           theme: {
+               extend: {
+                   colors: {
+                       mostazaRed: '#e60012',
+                       mostazaRedHover: '#c5000f',
+                       carbonDark: '#0d0d0d',
+                       carbonCard: '#161616',
+                       carbonBorder: '#262626',
+                   },
+                   fontFamily: {
+                       brand: ['Montserrat', 'sans-serif'],
+                       sans: ['Inter', 'sans-serif'],
+                   }
+               }
+           }
+       }
+   </script>
+   <style>
+       body {
+           background-color: #0d0d0d;
+           color: #ffffff;
+           font-family: 'Inter', sans-serif;
+       }
+       .brand-title {
+           font-family: 'Montserrat', sans-serif;
+           font-weight: 900;
+           letter-spacing: -0.04em;
+       }
+       ::-webkit-scrollbar {
+           width: 8px;
+       }
+       ::-webkit-scrollbar-track {
+           background: #0d0d0d;
+       }
+       ::-webkit-scrollbar-thumb {
+           background: #262626;
+           border-radius: 4px;
+       }
+       ::-webkit-scrollbar-thumb:hover {
+           background: #e60012;
+       }
+   </style>
+</head>
+<body class="min-h-screen flex flex-col bg-carbonDark text-white selection:bg-mostazaRed selection:text-white">
+
+
+   <header class="bg-carbonCard border-b border-carbonBorder sticky top-0 z-50 shadow-2xl">
+       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+           <div class="flex items-center space-x-3.5">
+               <div class="bg-mostazaRed text-white w-12 h-12 rounded-2xl flex items-center justify-center font-brand text-2xl shadow-lg shadow-mostazaRed/30">
+                   M
+               </div>
+               <div>
+                   <span class="brand-title text-2xl tracking-wider uppercase">Mostaza</span>
+                   <span class="block text-[11px] text-neutral-400 font-semibold tracking-widest uppercase">Monitor de API en Vivo</span>
+               </div>
+           </div>
+          
+           <div class="flex items-center space-x-3">
+               <div class="flex items-center space-x-2 bg-carbonDark px-4 py-2 rounded-full border border-carbonBorder">
+                   <span class="relative flex h-3 w-3">
+                     <span id="api-ping-dot" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                     <span id="api-status-dot" class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                   </span>
+                   <span id="api-status-text" class="text-xs font-semibold uppercase tracking-wider text-emerald-400">API Conectada</span>
+               </div>
+               <button onclick="cargarDatosAPI()" class="bg-carbonDark border border-carbonBorder hover:border-mostazaRed text-neutral-300 hover:text-white px-4 py-2 rounded-xl text-sm transition flex items-center space-x-2">
+                   <i class="fa-solid fa-rotate"></i>
+                   <span class="hidden sm:inline">Actualizar</span>
+               </button>
+           </div>
+       </div>
+   </header>
+
+
+   <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+
+       <!-- Panel de Estado / Última Respuesta de la API -->
+       <section class="bg-gradient-to-r from-carbonCard to-[#1a0c0e] border border-mostazaRed/30 rounded-3xl p-6 sm:p-8 relative shadow-2xl overflow-hidden">
+           <div class="absolute top-0 right-0 w-96 h-96 bg-mostazaRed/10 rounded-full blur-3xl pointer-events-none"></div>
+           <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+               <div class="space-y-2">
+                   <span class="bg-mostazaRed text-white text-[11px] font-brand font-bold uppercase tracking-widest px-3 py-1 rounded-full inline-block shadow-md">
+                       Última Respuesta de la API
+                   </span>
+                   <h2 id="api-response-title" class="text-xl sm:text-2xl font-brand font-bold tracking-tight text-white font-mono">Esperando datos...</h2>
+                   <p id="api-response-desc" class="text-neutral-400 text-sm max-w-xl font-mono">Conectando con el endpoint configurado para reflejar la información en tiempo real.</p>
+               </div>
+               <div class="bg-carbonDark/80 border border-carbonBorder p-4 rounded-2xl w-full lg:w-80 font-mono text-xs text-neutral-300 shadow-inner">
+                   <div class="text-neutral-500 mb-1 uppercase tracking-wider text-[10px]">Cuerpo JSON crudo:</div>
+                   <pre id="raw-json-output" class="overflow-x-auto text-emerald-400 max-h-24">{ "estado": "conectando..." }</pre>
+               </div>
+           </div>
+       </section>
+
+
+       <!-- Tabla con información real -->
+       <section class="bg-carbonCard border border-carbonBorder rounded-3xl overflow-hidden shadow-xl">
+           <div class="p-6 sm:p-8 border-b border-carbonBorder flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+               <div>
+                   <h3 class="font-brand font-bold text-xl uppercase tracking-wide">Datos devueltos por la API</h3>
+                   <p class="text-xs text-neutral-400 mt-1">Registros obtenidos directamente desde el servidor configurado.</p>
+               </div>
+           </div>
+
+
+           <div class="overflow-x-auto">
+               <table class="w-full text-left border-collapse">
+                   <thead>
+                       <tr class="border-b border-carbonBorder text-neutral-400 text-xs uppercase tracking-wider bg-carbonDark/50">
+                           <th class="py-4 px-6">Código / UID</th>
+                           <th class="py-4 px-6">Respuesta / Mensaje</th>
+                           <th class="py-4 px-6">Código HTTP</th>
+                           <th class="py-4 px-6">Estado</th>
+                       </tr>
+                   </thead>
+                   <tbody id="tabla-api-datos" class="divide-y divide-carbonBorder text-sm">
+                       <!-- Se llena dinámicamente -->
+                   </tbody>
+               </table>
+           </div>
+          
+           <div id="empty-state" class="hidden p-12 text-center text-neutral-500 space-y-2">
+               <i class="fa-solid fa-triangle-exclamation text-4xl mb-2 text-mostazaRed"></i>
+               <p class="font-medium">No se pudieron recibir datos de la API.</p>
+               <p class="text-xs">Verifica que la URL sea correcta y que el servidor esté activo en la red.</p>
+           </div>
+       </section>
+
+
+   </main>
+
+
+   <footer class="bg-carbonCard border-t border-carbonBorder py-6 mt-12 text-center text-xs text-neutral-500">
+       <p>© 2026 Mostaza Smart Ticketing Hub • Sincronización Automática con API</p>
+   </footer>
+
+
+   <script>
+    // Usa una ruta relativa para que funcione sin importar la IP del servidor
+    const API_ENDPOINT = "/historial";
+
+    async function cargarDatosAPI() {
+        const statusDot = document.getElementById('api-status-dot');
+        const statusText = document.getElementById('api-status-text');
+        const statusPing = document.getElementById('api-ping-dot');
+        const rawJson = document.getElementById('raw-json-output');
+        const tbody = document.getElementById('tabla-api-datos');
+        const emptyState = document.getElementById('empty-state');
+        const responseTitle = document.getElementById('api-response-title');
+        const responseDesc = document.getElementById('api-response-desc');
+
+        try {
+            const response = await fetch(API_ENDPOINT);
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            
+            const data = await response.json();
+
+            // Estado de conexión exitoso
+            statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-emerald-500";
+            statusPing.classList.remove('hidden');
+            statusText.innerText = "API Conectada";
+            statusText.className = "text-xs font-semibold uppercase tracking-wider text-emerald-400";
+
+            // Raw JSON
+            rawJson.innerText = JSON.stringify(data, null, 2);
+            responseTitle.innerText = `Total registrados: ${data.total}`;
+            responseDesc.innerText = "Historial de entregas sincronizado correctamente.";
+
+            tbody.innerHTML = '';
+
+            if (!data.tickets || data.tickets.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            // Renderizar cada ticket del historial
+            data.tickets.forEach(ticket => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-carbonDark/50 transition duration-200';
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-mono font-bold text-xs text-white">#${ticket.id} - ${ticket.cae}</td>
+                    <td class="py-4 px-6 font-medium text-neutral-300">Ticket Registrado</td>
+                    <td class="py-4 px-6 font-mono text-emerald-400">${ticket.fecha}</td>
+                    <td class="py-4 px-6"><span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold uppercase">ENTREGADO</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (error) {
+            statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-mostazaRed";
+            statusPing.classList.add('hidden');
+            statusText.innerText = "Error de Conexión";
+            statusText.className = "text-xs font-semibold uppercase tracking-wider text-mostazaRed";
+
+            rawJson.innerText = `{ "error": "${error.message}" }`;
+            responseTitle.innerText = "ERROR DE CONEXIÓN CON LA API";
+            responseDesc.innerText = "No se pudo alcanzar el endpoint /historial.";
+           
+            tbody.innerHTML = '';
+            emptyState.classList.remove('hidden');
+        }
+    }
+
+    window.onload = function() {
+        cargarDatosAPI();
+        setInterval(cargarDatosAPI, 5000);
+    }
+</script>
+</body>
+</html>
+
