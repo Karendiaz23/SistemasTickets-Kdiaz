@@ -1,0 +1,24 @@
+{
+  "name": "sistemastickets-kdiaz",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Karendiaz23/SistemasTickets-Kdiaz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Karendiaz23/SistemasTickets-Kdiaz/issues"
+  },
+  "homepage": "https://github.com/Karendiaz23/SistemasTickets-Kdiaz#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "sqlite3": "^6.0.1"
+  }
+}
