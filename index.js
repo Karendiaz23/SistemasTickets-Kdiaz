@@ -109,6 +109,7 @@ app.get('/validar', async (req, res) => {
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify(payload)
      });
+     
 
      const responseText = await responseInsert.text();
 
