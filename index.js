@@ -149,10 +149,10 @@ app.get('/validar', async (req, res) => {
  }
 });
 
-// Ruta para historial
+// Ruta para historial (trae hasta 500 registros sin cortarse)
 app.get('/historial', async (req, res) => {
  try {
-   const response = await fetch(`${POCKETBASE_URL}/api/collections/tickets/records?sort=-created`);
+   const response = await fetch(`${POCKETBASE_URL}/api/collections/tickets/records?sort=-created&perPage=500`);
    const data = await response.json();
    res.json({ total: data.totalItems || 0, tickets: data.items || [] });
  } catch (err) {
