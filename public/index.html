@@ -90,7 +90,11 @@
            </button>
            <button data-tab="filtros" onclick="cambiarSeccion('filtros')" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition whitespace-nowrap text-neutral-400 hover:text-white hover:bg-carbonDark">
                <i class="fa-solid fa-magnifying-glass w-4 text-center"></i>
-               <span>CAE y Horarios</span>
+               <span>CAE, Fechas y Estados</span>
+           </button>
+           <button data-tab="anular" onclick="cambiarSeccion('anular')" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition whitespace-nowrap text-neutral-400 hover:text-white hover:bg-carbonDark">
+               <i class="fa-solid fa-ban w-4 text-center"></i>
+               <span>Anular Ticket</span>
            </button>
            <button data-tab="estadisticas" onclick="cambiarSeccion('estadisticas')" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition whitespace-nowrap text-neutral-400 hover:text-white hover:bg-carbonDark">
                <i class="fa-solid fa-chart-line w-4 text-center"></i>
@@ -102,7 +106,43 @@
            </button>
        </aside>
 
-       <main class="flex-grow p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto">
+       <main class="flex-grow p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
+
+           <!-- RESUMEN SUPERIOR -->
+           <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+               <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-5 flex items-center justify-between shadow-lg">
+                   <div>
+                       <p class="text-xs uppercase tracking-wider text-neutral-400">Entregados Hoy</p>
+                       <p id="kpi-entregados-hoy" class="text-3xl font-brand font-bold text-emerald-400 mt-1">0</p>
+                       <p id="kpi-entregados-total" class="text-[11px] text-neutral-500 mt-1 font-mono">Total histórico: 0</p>
+                   </div>
+                   <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+                       <i class="fa-solid fa-circle-check"></i>
+                   </div>
+               </div>
+
+               <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-5 flex items-center justify-between shadow-lg">
+                   <div>
+                       <p class="text-xs uppercase tracking-wider text-neutral-400">Intentos Repetidos (Bloqueados)</p>
+                       <p id="kpi-repetidos-hoy" class="text-3xl font-brand font-bold text-amber-400 mt-1">0</p>
+                       <p id="kpi-repetidos-total" class="text-[11px] text-neutral-500 mt-1 font-mono">Total frenados: 0</p>
+                   </div>
+                   <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+                       <i class="fa-solid fa-shield-halved"></i>
+                   </div>
+               </div>
+
+               <div id="card-kpi-anulados" class="bg-carbonCard border border-carbonBorder rounded-3xl p-5 flex items-center justify-between shadow-lg">
+                   <div>
+                       <p class="text-xs uppercase tracking-wider text-neutral-400">Anulaciones Hoy</p>
+                       <p id="kpi-anulados-hoy" class="text-3xl font-brand font-bold text-mostazaRed mt-1">0</p>
+                       <p id="kpi-anulados-total" class="text-[11px] text-neutral-500 mt-1 font-mono">Total anulados: 0</p>
+                   </div>
+                   <div class="w-12 h-12 rounded-2xl bg-mostazaRed/10 border border-mostazaRed/20 text-mostazaRed flex items-center justify-center text-lg">
+                       <i class="fa-solid fa-ban"></i>
+                   </div>
+               </div>
+           </section>
 
            <!-- SECCIÓN 1: EN VIVO -->
            <section id="seccion-vivo" class="seccion-panel space-y-6">
@@ -125,8 +165,8 @@
                <div class="bg-carbonCard border border-carbonBorder rounded-3xl overflow-hidden shadow-xl">
                    <div class="p-6 border-b border-carbonBorder flex items-center justify-between">
                        <div>
-                           <h3 class="font-brand font-bold text-lg uppercase tracking-wide">Últimas Entregas</h3>
-                           <p class="text-xs text-neutral-400 mt-0.5">Los 10 tickets más recientes registrados en el sistema.</p>
+                           <h3 class="font-brand font-bold text-lg uppercase tracking-wide">Últimos Movimientos</h3>
+                           <p class="text-xs text-neutral-400 mt-0.5">Los 10 eventos más recientes (entregas, intentos repetidos o anulaciones).</p>
                        </div>
                    </div>
                    <div class="overflow-x-auto">
@@ -145,64 +185,77 @@
                </div>
            </section>
 
-           <!-- SECCIÓN 2: CAE Y HORARIOS (US-08 Y US-09) -->
+           <!-- SECCIÓN 2: CAE, FECHAS, HORARIOS Y ESTADO -->
            <section id="seccion-filtros" class="seccion-panel hidden space-y-6">
                <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-5 shadow-xl">
-                   <div>
-                       <h3 class="font-brand font-bold text-xl uppercase tracking-wide">Búsqueda por CAE y Rango Horario</h3>
-                       <p class="text-xs text-neutral-400 mt-1">Ingresá los últimos 4 dígitos del CAE y/o filtrá por horario de entrega.</p>
+                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                       <div>
+                           <h3 class="font-brand font-bold text-xl uppercase tracking-wide">Filtros de Búsqueda y Exportación</h3>
+                           <p class="text-xs text-neutral-400 mt-1">Filtrá por últimos 4 dígitos del CAE, fecha, horario o estado del movimiento.</p>
+                       </div>
+                       <button type="button" onclick="limpiarTodosLosFiltros()" class="bg-mostazaRed hover:bg-mostazaRedHover text-white px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-2 self-start sm:self-auto">
+                           <i class="fa-solid fa-broom"></i>
+                           <span>Limpiar todos los filtros</span>
+                       </button>
                    </div>
 
-                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                       <div class="md:col-span-1">
-                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-2">Últimos 4 dígitos del CAE</label>
-                           <div class="flex gap-2">
-                               <input
-                                   id="buscar-cae"
-                                   type="text"
-                                   maxlength="20"
-                                   placeholder="Ej: 4821"
-                                   oninput="renderizarFiltros()"
-                                   class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white placeholder-neutral-500 outline-none font-mono"
-                               />
-                               <button type="button" onclick="limpiarCae()" class="bg-carbonDark border border-carbonBorder hover:border-mostazaRed text-neutral-300 px-3 rounded-xl text-xs">
-                                   <i class="fa-solid fa-xmark"></i>
-                               </button>
-                           </div>
+                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                       <div>
+                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-2">Últimos 4 CAE</label>
+                           <input id="buscar-cae" type="text" maxlength="20" placeholder="Ej: 4821" oninput="renderizarFiltros()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 outline-none font-mono" />
+                       </div>
+
+                       <div>
+                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-2">Estado</label>
+                           <select id="filtro-estado" onchange="renderizarFiltros()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2.5 text-sm text-white outline-none">
+                               <option value="TODOS">Todos</option>
+                               <option value="ENTREGADO">Entregado</option>
+                               <option value="ANULADO">Anulado</option>
+                               <option value="INTENTO_REPETIDO">Intento repetido</option>
+                           </select>
+                       </div>
+
+                       <div>
+                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-2">Fecha Desde</label>
+                           <input id="fecha-desde" type="date" onchange="renderizarFiltros()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2.5 text-sm text-white outline-none font-mono" />
+                       </div>
+
+                       <div>
+                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-2">Fecha Hasta</label>
+                           <input id="fecha-hasta" type="date" onchange="renderizarFiltros()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2.5 text-sm text-white outline-none font-mono" />
                        </div>
 
                        <div>
                            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-2">Hora Desde</label>
-                           <input
-                               id="hora-desde"
-                               type="time"
-                               onchange="renderizarFiltros()"
-                               class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono"
-                           />
+                           <input id="hora-desde" type="time" onchange="renderizarFiltros()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2.5 text-sm text-white outline-none font-mono" />
                        </div>
 
                        <div>
                            <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-2">Hora Hasta</label>
-                           <div class="flex gap-2">
-                               <input
-                                   id="hora-hasta"
-                                   type="time"
-                                   onchange="renderizarFiltros()"
-                                   class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono"
-                               />
-                               <button type="button" onclick="limpiarHorario()" class="bg-carbonDark border border-carbonBorder hover:border-mostazaRed text-neutral-300 px-3 rounded-xl text-xs" title="Limpiar horario">
-                                   <i class="fa-solid fa-rotate-left"></i>
-                               </button>
-                           </div>
+                           <input id="hora-hasta" type="time" onchange="renderizarFiltros()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2.5 text-sm text-white outline-none font-mono" />
                        </div>
                    </div>
                </div>
 
                <div class="bg-carbonCard border border-carbonBorder rounded-3xl overflow-hidden shadow-xl">
-                   <div class="p-5 border-b border-carbonBorder flex items-center justify-between">
-                       <span class="text-sm font-semibold text-neutral-300">Resultados filtrados</span>
-                       <span id="contador-filtrados" class="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">0 tickets</span>
+                   <div class="p-5 border-b border-carbonBorder flex flex-wrap items-center justify-between gap-3">
+                       <div class="flex items-center gap-3">
+                           <span class="text-sm font-semibold text-neutral-300">Resultados</span>
+                           <span id="contador-filtrados" class="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">0 registros</span>
+                       </div>
+
+                       <div class="flex items-center gap-2">
+                           <button type="button" onclick="exportarExcel(ticketsFiltradosActuales, 'tickets_filtrados')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                               <i class="fa-solid fa-file-excel"></i>
+                               <span>Exportar Excel</span>
+                           </button>
+                           <button type="button" onclick="exportarPDF(ticketsFiltradosActuales, 'Reporte de Tickets Filtrados')" class="bg-mostazaRed/20 hover:bg-mostazaRed/30 text-mostazaRed border border-mostazaRed/40 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                               <i class="fa-solid fa-file-pdf"></i>
+                               <span>Exportar PDF</span>
+                           </button>
+                       </div>
                    </div>
+
                    <div class="overflow-x-auto">
                        <table class="w-full text-left border-collapse">
                            <thead>
@@ -216,13 +269,115 @@
                            <tbody id="tabla-filtrados" class="divide-y divide-carbonBorder text-sm"></tbody>
                        </table>
                    </div>
-                   <div id="vacio-filtros" class="hidden p-10 text-center text-neutral-500 text-sm">
-                       No hay tickets que coincidan con el CAE o el rango horario seleccionado.
+
+                   <div id="vacio-filtros" class="hidden p-12 text-center space-y-2">
+                       <i class="fa-regular fa-folder-open text-3xl text-neutral-500"></i>
+                       <p id="vacio-filtros-titulo" class="text-sm font-semibold text-neutral-300">No se encontraron registros para los filtros seleccionados.</p>
+                       <p class="text-xs text-neutral-500">Probá cambiar el estado, la fecha, el horario o tocá "Limpiar todos los filtros".</p>
                    </div>
                </div>
            </section>
 
-           <!-- SECCIÓN 3: ESTADÍSTICAS Y PICOS (US-10, US-12, US-13) -->
+           <!-- SECCIÓN 3: ANULAR TICKET (US-17, US-18, US-21, US-22, US-27, US-32) -->
+           <section id="seccion-anular" class="seccion-panel hidden space-y-6">
+               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                   <!-- Formulario de Anulación con PIN y Motivo -->
+                   <form onsubmit="enviarAnulacionTicket(event)" class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-4 shadow-xl">
+                       <div>
+                           <span class="bg-mostazaRed/20 text-mostazaRed border border-mostazaRed/40 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full inline-block">
+                               Control de Encargado
+                           </span>
+                           <h3 class="font-brand font-bold text-xl uppercase tracking-wide mt-2">Anular Ticket por CAE</h3>
+                           <p class="text-xs text-neutral-400 mt-1">Bloquea el CAE para que no pueda validarse y registra quién lo anuló y por qué.</p>
+                       </div>
+
+                       <div>
+                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Número de CAE</label>
+                           <input id="anular-cae" type="text" required placeholder="Ej: 74185296301425" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+                       </div>
+
+                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <div>
+                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Encargado / Usuario</label>
+                               <input id="anular-encargado" type="text" value="Encargado" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none" />
+                           </div>
+                           <div>
+                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">PIN de Encargado (US-18)</label>
+                               <input id="anular-pin" type="password" required placeholder="PIN (ej: 1234)" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+                           </div>
+                       </div>
+
+                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <div>
+                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Motivo Rápido (US-32)</label>
+                               <select id="anular-motivo-preset" onchange="aplicarMotivoPreset()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none">
+                                   <option value="Devolución de dinero">Devolución de dinero</option>
+                                   <option value="Error de cajero">Error de cajero</option>
+                                   <option value="Pedido cancelado">Pedido cancelado</option>
+                                   <option value="OTRO">Otro motivo...</option>
+                               </select>
+                           </div>
+                           <div>
+                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Detalle del Motivo</label>
+                               <input id="anular-motivo-texto" type="text" value="Devolución de dinero" required placeholder="Escribí el motivo breve..." class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none" />
+                           </div>
+                       </div>
+
+                       <div id="mensaje-anulacion" class="hidden text-xs font-mono px-4 py-3 rounded-2xl border"></div>
+
+                       <button type="submit" class="w-full bg-mostazaRed hover:bg-mostazaRedHover text-white font-semibold py-3 rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-mostazaRed/20">
+                           <i class="fa-solid fa-ban"></i>
+                           <span>Confirmar Anulación de Ticket</span>
+                       </button>
+                   </form>
+
+                   <!-- US-22 y US-27: Alerta de jornada y Anulaciones por Encargado -->
+                   <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-5 shadow-xl">
+                       <div class="flex items-center justify-between border-b border-carbonBorder pb-4">
+                           <div>
+                               <h3 class="font-brand font-bold text-lg uppercase tracking-wide">Alerta de Anulaciones de la Jornada</h3>
+                               <p class="text-xs text-neutral-400 mt-0.5">Control rápido de cancelaciones del día y por encargado.</p>
+                           </div>
+                           <span id="badge-alerta-jornada" class="text-xs font-mono px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                               Jornada normal
+                           </span>
+                       </div>
+
+                       <div>
+                           <h4 class="text-xs uppercase tracking-wider text-neutral-400 mb-2.5">Anulaciones por Encargado (US-27)</h4>
+                           <div id="lista-anulaciones-encargado" class="space-y-2">
+                               <p class="text-xs text-neutral-500 font-mono">Sin anulaciones registradas todavía.</p>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+
+               <!-- US-21 y US-27: Listado detallado de tickets anulados -->
+               <div class="bg-carbonCard border border-carbonBorder rounded-3xl overflow-hidden shadow-xl">
+                   <div class="p-6 border-b border-carbonBorder flex items-center justify-between">
+                       <div>
+                           <h3 class="font-brand font-bold text-lg uppercase tracking-wide">Tickets Anulados Registrados</h3>
+                           <p class="text-xs text-neutral-400 mt-0.5">Fecha y hora exacta de anulación, encargado responsable y motivo.</p>
+                       </div>
+                       <span id="contador-tabla-anulados" class="text-xs font-mono text-mostazaRed bg-mostazaRed/10 border border-mostazaRed/30 px-3 py-1 rounded-full">0 anulados</span>
+                   </div>
+                   <div class="overflow-x-auto">
+                       <table class="w-full text-left border-collapse">
+                           <thead>
+                               <tr class="border-b border-carbonBorder text-neutral-400 text-xs uppercase tracking-wider bg-carbonDark/50">
+                                   <th class="py-3.5 px-6">CAE</th>
+                                   <th class="py-3.5 px-6">Encargado</th>
+                                   <th class="py-3.5 px-6">Motivo</th>
+                                   <th class="py-3.5 px-6">Fecha y Hora Anulación</th>
+                               </tr>
+                           </thead>
+                           <tbody id="tabla-anulados-detalle" class="divide-y divide-carbonBorder text-sm"></tbody>
+                       </table>
+                   </div>
+               </div>
+           </section>
+
+           <!-- SECCIÓN 4: ESTADÍSTICAS Y PICOS -->
            <section id="seccion-estadisticas" class="seccion-panel hidden space-y-6">
                <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-4 shadow-xl">
                    <div class="flex items-center justify-between border-b border-carbonBorder pb-3">
@@ -254,17 +409,27 @@
                </div>
            </section>
 
-           <!-- SECCIÓN 4: HISTORIAL COMPLETO (US-11) -->
+           <!-- SECCIÓN 5: HISTORIAL COMPLETO -->
            <section id="seccion-historial" class="seccion-panel hidden space-y-6">
                <div class="bg-carbonCard border border-carbonBorder rounded-3xl overflow-hidden shadow-xl">
                    <div class="p-6 border-b border-carbonBorder flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                        <div>
-                           <h3 class="font-brand font-bold text-xl uppercase tracking-wide">Historial Completo de Tickets</h3>
-                           <p class="text-xs text-neutral-400 mt-1">Todos los tickets registrados en la base de datos local sin perder registros anteriores.</p>
+                           <h3 class="font-brand font-bold text-xl uppercase tracking-wide">Historial Completo de Movimientos</h3>
+                           <p class="text-xs text-neutral-400 mt-1">Todos los tickets entregados, anulados e intentos repetidos registrados.</p>
                        </div>
-                       <span id="total-historial-badge" class="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full self-start sm:self-auto">
-                           0 registros
-                       </span>
+                       <div class="flex flex-wrap items-center gap-2">
+                           <span id="total-historial-badge" class="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full">
+                               0 registros
+                           </span>
+                           <button type="button" onclick="exportarExcel(ticketsCargados, 'historial_completo_tickets')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                               <i class="fa-solid fa-file-excel"></i>
+                               <span>Excel</span>
+                           </button>
+                           <button type="button" onclick="exportarPDF(ticketsCargados, 'Historial Completo de Tickets')" class="bg-mostazaRed/20 hover:bg-mostazaRed/30 text-mostazaRed border border-mostazaRed/40 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                               <i class="fa-solid fa-file-pdf"></i>
+                               <span>PDF</span>
+                           </button>
+                       </div>
                    </div>
 
                    <div class="overflow-x-auto">
@@ -289,6 +454,7 @@
    <script>
     const API_ENDPOINT = "/historial";
     let ticketsCargados = [];
+    let ticketsFiltradosActuales = [];
 
     function cambiarSeccion(nombreSeccion) {
         document.querySelectorAll('.seccion-panel').forEach(panel => {
@@ -306,12 +472,79 @@
         });
     }
 
+    function aplicarMotivoPreset() {
+        const preset = document.getElementById('anular-motivo-preset').value;
+        const inputTexto = document.getElementById('anular-motivo-texto');
+        if (preset === 'OTRO') {
+            inputTexto.value = '';
+            inputTexto.focus();
+        } else {
+            inputTexto.value = preset;
+        }
+    }
+
+    async function enviarAnulacionTicket(event) {
+        event.preventDefault();
+        const cae = document.getElementById('anular-cae').value.trim();
+        const encargado = document.getElementById('anular-encargado').value.trim() || 'Encargado';
+        const pin = document.getElementById('anular-pin').value.trim();
+        const motivo = document.getElementById('anular-motivo-texto').value.trim();
+        const msgBox = document.getElementById('mensaje-anulacion');
+
+        msgBox.classList.remove('hidden');
+
+        try {
+            const resp = await fetch('/anular', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cae, encargado, pin, motivo })
+            });
+            const data = await resp.json();
+
+            if (!resp.ok || !data.ok) {
+                msgBox.className = "text-xs font-mono px-4 py-3 rounded-2xl border bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40";
+                msgBox.innerText = data.error || "No se pudo anular el ticket.";
+                return;
+            }
+
+            msgBox.className = "text-xs font-mono px-4 py-3 rounded-2xl border bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+            msgBox.innerText = data.mensaje;
+
+            document.getElementById('anular-cae').value = '';
+            document.getElementById('anular-pin').value = '';
+            await cargarDatosAPI();
+        } catch (err) {
+            msgBox.className = "text-xs font-mono px-4 py-3 rounded-2xl border bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40";
+            msgBox.innerText = "Error de conexión al intentar anular.";
+        }
+    }
+
     function obtenerFechaObjTicket(ticket) {
         if (ticket.created) {
             const d = new Date(ticket.created);
             if (!Number.isNaN(d.getTime())) return d;
         }
         return null;
+    }
+
+    function obtenerFechaISOTicket(ticket) {
+        const d = obtenerFechaObjTicket(ticket);
+        if (!d) return null;
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(d);
+    }
+
+    function obtenerHoyISOArgentina() {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Argentina/Buenos_Aires',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(new Date());
     }
 
     function formatearFechaHoraTicket(ticket) {
@@ -406,21 +639,112 @@
         return caeLimpio.includes(consultaLimpia);
     }
 
-    function limpiarCae() {
-        const input = document.getElementById('buscar-cae');
-        if (input) {
-            input.value = '';
-            input.focus();
-        }
+    function limpiarTodosLosFiltros() {
+        document.getElementById('buscar-cae').value = '';
+        document.getElementById('filtro-estado').value = 'TODOS';
+        document.getElementById('fecha-desde').value = '';
+        document.getElementById('fecha-hasta').value = '';
+        document.getElementById('hora-desde').value = '';
+        document.getElementById('hora-hasta').value = '';
         renderizarFiltros();
     }
 
-    function limpiarHorario() {
-        const desde = document.getElementById('hora-desde');
-        const hasta = document.getElementById('hora-hasta');
-        if (desde) desde.value = '';
-        if (hasta) hasta.value = '';
-        renderizarFiltros();
+    function obtenerBadgeEstado(estadoRaw) {
+        const estado = (estadoRaw || 'ENTREGADO').toUpperCase();
+        if (estado === 'INTENTO_REPETIDO') {
+            return `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold uppercase">INTENTO REPETIDO</span>`;
+        }
+        if (estado === 'ANULADO') {
+            return `<span class="bg-mostazaRed/20 text-mostazaRed border border-mostazaRed/40 px-3 py-1 rounded-full text-xs font-semibold uppercase">ANULADO</span>`;
+        }
+        return `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold uppercase">ENTREGADO</span>`;
+    }
+
+    function exportarExcel(listaTickets, nombreBase) {
+        if (!listaTickets || listaTickets.length === 0) {
+            alert("No hay registros en la vista actual para exportar.");
+            return;
+        }
+        const encabezados = ["ID", "CAE", "Detalle", "Fecha y Hora", "Estado"];
+        const filas = listaTickets.map(t => [
+            `"${t.id || ''}"`,
+            `"${t.cae || ''}"`,
+            `"${t.detalle || 'Ticket Registrado'}"`,
+            `"${formatearFechaHoraTicket(t)}"`,
+            `"${(t.estado || 'ENTREGADO').toUpperCase()}"`
+        ].join(";"));
+
+        const csvContenido = "\uFEFF" + [encabezados.join(";"), ...filas].join("\n");
+        const blob = new Blob([csvContenido], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const fechaHoy = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `${nombreBase}_${fechaHoy}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function exportarPDF(listaTickets, tituloReporte) {
+        if (!listaTickets || listaTickets.length === 0) {
+            alert("No hay registros en la vista actual para exportar.");
+            return;
+        }
+        const ventana = window.open("", "_blank", "width=900,height=700");
+        if (!ventana) {
+            alert("Permití ventanas emergentes para generar el PDF.");
+            return;
+        }
+
+        const filasHTML = listaTickets.map(t => `
+            <tr>
+                <td>#${t.id || ''}</td>
+                <td><strong>${t.cae || ''}</strong></td>
+                <td>${t.detalle || 'Ticket Registrado'}</td>
+                <td>${formatearFechaHoraTicket(t)}</td>
+                <td>${(t.estado || 'ENTREGADO').toUpperCase()}</td>
+            </tr>
+        `).join("");
+
+        ventana.document.write(`
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>${tituloReporte}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+                    h1 { margin: 0 0 6px 0; font-size: 20px; color: #e60012; }
+                    p { margin: 0 0 16px 0; font-size: 12px; color: #555; }
+                    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                    th { background: #f4f4f4; }
+                </style>
+            </head>
+            <body>
+                <h1>Mostaza - ${tituloReporte}</h1>
+                <p>Generado el ${new Date().toLocaleString('es-AR')} • Total de registros: ${listaTickets.length}</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>CAE</th>
+                            <th>Detalle</th>
+                            <th>Fecha y Hora</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>${filasHTML}</tbody>
+                </table>
+                <script>
+                    window.onload = function() { window.print(); };
+                <\/script>
+            </body>
+            </html>
+        `);
+        ventana.document.close();
     }
 
     function crearFilaTicket(ticket) {
@@ -428,11 +752,85 @@
         tr.className = 'hover:bg-carbonDark/50 transition';
         tr.innerHTML = `
             <td class="py-3.5 px-6 font-mono font-bold text-xs text-white">#${ticket.id} - ${ticket.cae}</td>
-            <td class="py-3.5 px-6 text-neutral-300">Ticket Registrado</td>
+            <td class="py-3.5 px-6 text-neutral-300 text-xs">${ticket.detalle || 'Ticket Registrado'}</td>
             <td class="py-3.5 px-6 font-mono text-emerald-400 text-xs">${formatearFechaHoraTicket(ticket)}</td>
-            <td class="py-3.5 px-6"><span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold uppercase">ENTREGADO</span></td>
+            <td class="py-3.5 px-6">${obtenerBadgeEstado(ticket.estado)}</td>
         `;
         return tr;
+    }
+
+    function renderizarResumenKPI() {
+        const hoyISO = obtenerHoyISOArgentina();
+
+        const entregadosTodos = ticketsCargados.filter(t => (t.estado || 'ENTREGADO') === 'ENTREGADO');
+        const repetidosTodos = ticketsCargados.filter(t => t.estado === 'INTENTO_REPETIDO');
+        const anuladosTodos = ticketsCargados.filter(t => t.estado === 'ANULADO');
+
+        const entregadosHoy = entregadosTodos.filter(t => obtenerFechaISOTicket(t) === hoyISO).length;
+        const repetidosHoy = repetidosTodos.filter(t => obtenerFechaISOTicket(t) === hoyISO).length;
+        const anuladosHoy = anuladosTodos.filter(t => obtenerFechaISOTicket(t) === hoyISO).length;
+
+        document.getElementById('kpi-entregados-hoy').innerText = entregadosHoy;
+        document.getElementById('kpi-entregados-total').innerText = `Total histórico: ${entregadosTodos.length}`;
+
+        document.getElementById('kpi-repetidos-hoy').innerText = repetidosHoy;
+        document.getElementById('kpi-repetidos-total').innerText = `Total frenados: ${repetidosTodos.length}`;
+
+        document.getElementById('kpi-anulados-hoy').innerText = anuladosHoy;
+        document.getElementById('kpi-anulados-total').innerText = `Total anulados: ${anuladosTodos.length}`;
+
+        // US-22: Destacar visualmente cuando hay anulaciones en la jornada (ej: 3 o más)
+        const cardAnulados = document.getElementById('card-kpi-anulados');
+        const badgeAlerta = document.getElementById('badge-alerta-jornada');
+        if (anuladosHoy >= 3) {
+            cardAnulados.className = "bg-[#1e0b0d] border-2 border-mostazaRed rounded-3xl p-5 flex items-center justify-between shadow-lg shadow-mostazaRed/20";
+            badgeAlerta.className = "text-xs font-mono px-3.5 py-1.5 rounded-full bg-mostazaRed text-white font-bold";
+            badgeAlerta.innerText = `Alerta: ${anuladosHoy} anulaciones hoy`;
+        } else {
+            cardAnulados.className = "bg-carbonCard border border-carbonBorder rounded-3xl p-5 flex items-center justify-between shadow-lg";
+            badgeAlerta.className = "text-xs font-mono px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30";
+            badgeAlerta.innerText = `${anuladosHoy} anulaciones hoy`;
+        }
+    }
+
+    // US-21 y US-27: Renderizar tabla de anulados y ranking por encargado
+    function renderizarAnulados() {
+        const anulados = ticketsCargados.filter(t => t.estado === 'ANULADO');
+        const tbody = document.getElementById('tabla-anulados-detalle');
+        const contador = document.getElementById('contador-tabla-anulados');
+        const listaEncargados = document.getElementById('lista-anulaciones-encargado');
+
+        contador.innerText = `${anulados.length} ${anulados.length === 1 ? 'anulado' : 'anulados'}`;
+
+        if (anulados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-neutral-500">No hay tickets anulados registrados.</td></tr>`;
+            listaEncargados.innerHTML = `<p class="text-xs text-neutral-500 font-mono">Sin anulaciones registradas todavía.</p>`;
+            return;
+        }
+
+        tbody.innerHTML = anulados.map(a => `
+            <tr class="hover:bg-carbonDark/50 transition">
+                <td class="py-3.5 px-6 font-mono font-bold text-xs text-white">${a.cae}</td>
+                <td class="py-3.5 px-6 text-xs font-semibold text-amber-300">${a.encargado || 'Encargado'}</td>
+                <td class="py-3.5 px-6 text-xs text-neutral-300">${a.motivo || 'Sin motivo especificado'}</td>
+                <td class="py-3.5 px-6 font-mono text-xs text-mostazaRed">${formatearFechaHoraTicket(a)}</td>
+            </tr>
+        `).join('');
+
+        const porEncargado = new Map();
+        anulados.forEach(a => {
+            const nombre = a.encargado || 'Encargado';
+            porEncargado.set(nombre, (porEncargado.get(nombre) || 0) + 1);
+        });
+
+        listaEncargados.innerHTML = Array.from(porEncargado.entries())
+            .sort((a, b) => b[1] - a[1])
+            .map(([nombre, cant]) => `
+                <div class="flex items-center justify-between bg-carbonDark border border-carbonBorder rounded-2xl px-4 py-2.5">
+                    <span class="text-xs font-semibold text-white">${nombre}</span>
+                    <span class="text-xs font-mono font-bold text-mostazaRed">${cant} ${cant === 1 ? 'anulación' : 'anulaciones'}</span>
+                </div>
+            `).join('');
     }
 
     function renderizarUltimosTickets() {
@@ -440,7 +838,7 @@
         tbody.innerHTML = '';
         const ultimos = ticketsCargados.slice(0, 10);
         if (ultimos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-neutral-500">Sin tickets registrados todavía.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-neutral-500">Sin movimientos registrados todavía.</td></tr>`;
             return;
         }
         ultimos.forEach(t => tbody.appendChild(crearFilaTicket(t)));
@@ -449,16 +847,33 @@
     function renderizarFiltros() {
         const tbody = document.getElementById('tabla-filtrados');
         const vacio = document.getElementById('vacio-filtros');
+        const vacioTitulo = document.getElementById('vacio-filtros-titulo');
         const contador = document.getElementById('contador-filtrados');
 
         const consultaCae = (document.getElementById('buscar-cae')?.value || '').trim();
+        const estadoSeleccionado = document.getElementById('filtro-estado')?.value || 'TODOS';
+        const fechaDesde = document.getElementById('fecha-desde')?.value || '';
+        const fechaHasta = document.getElementById('fecha-hasta')?.value || '';
         const minDesde = horaInputAMinutos(document.getElementById('hora-desde')?.value);
         const minHasta = horaInputAMinutos(document.getElementById('hora-hasta')?.value);
 
         const filtrados = ticketsCargados.filter(ticket => {
             const okCae = coincideCae(ticket.cae, consultaCae);
-            let okHora = true;
+            const estadoTicket = (ticket.estado || 'ENTREGADO').toUpperCase();
+            const okEstado = estadoSeleccionado === 'TODOS' || estadoTicket === estadoSeleccionado;
 
+            let okFecha = true;
+            if (fechaDesde || fechaHasta) {
+                const fechaTicket = obtenerFechaISOTicket(ticket);
+                if (!fechaTicket) {
+                    okFecha = false;
+                } else {
+                    if (fechaDesde && fechaTicket < fechaDesde) okFecha = false;
+                    if (fechaHasta && fechaTicket > fechaHasta) okFecha = false;
+                }
+            }
+
+            let okHora = true;
             if (minDesde !== null || minHasta !== null) {
                 const minTicket = extraerMinutosTicket(ticket);
                 if (minTicket === null) {
@@ -474,13 +889,23 @@
                 }
             }
 
-            return okCae && okHora;
+            return okCae && okEstado && okFecha && okHora;
         });
 
-        contador.innerText = `${filtrados.length} ${filtrados.length === 1 ? 'ticket' : 'tickets'}`;
+        ticketsFiltradosActuales = filtrados;
+        contador.innerText = `${filtrados.length} ${filtrados.length === 1 ? 'registro' : 'registros'}`;
         tbody.innerHTML = '';
 
         if (filtrados.length === 0) {
+            if (estadoSeleccionado !== 'TODOS') {
+                vacioTitulo.innerText = `No hay registros con estado "${estadoSeleccionado}" para la búsqueda actual.`;
+            } else if (fechaDesde && fechaHasta && fechaDesde === fechaHasta) {
+                vacioTitulo.innerText = `No hubo registros el día ${fechaDesde}.`;
+            } else if (consultaCae) {
+                vacioTitulo.innerText = `No se encontraron tickets con CAE "${consultaCae}".`;
+            } else {
+                vacioTitulo.innerText = "No hay registros cargados para los filtros seleccionados.";
+            }
             vacio.classList.remove('hidden');
             return;
         }
@@ -498,7 +923,9 @@
         const conteoHora = new Map();
         const conteoDia = new Map();
 
-        ticketsCargados.forEach(ticket => {
+        const soloEntregados = ticketsCargados.filter(t => (t.estado || 'ENTREGADO') === 'ENTREGADO');
+
+        soloEntregados.forEach(ticket => {
             const hora = extraerHoraNumero(ticket);
             if (hora !== null) {
                 conteoHora.set(hora, (conteoHora.get(hora) || 0) + 1);
@@ -600,10 +1027,12 @@
             statusText.innerText = "API Conectada";
             statusText.className = "text-[11px] font-semibold uppercase tracking-wider text-emerald-400";
 
-            rawJson.innerText = JSON.stringify(data, null, 2);
-            responseTitle.innerText = `Total registrados: ${data.total ?? ticketsCargados.length}`;
-            responseDesc.innerText = "Base de datos local sincronizada correctamente.";
+            rawJson.innerText = JSON.stringify(data.resumen || data, null, 2);
+            responseTitle.innerText = `Total movimientos: ${data.total ?? ticketsCargados.length}`;
+            responseDesc.innerText = "Entregas, bloqueos por repetición y anulaciones sincronizados.";
 
+            renderizarResumenKPI();
+            renderizarAnulados();
             renderizarUltimosTickets();
             renderizarFiltros();
             renderizarEstadisticas();

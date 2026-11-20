@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-cd /home/etec/Documentos/SistemasTickets-Kdiaz || exit 1
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$APP_DIR" || exit 1
 
+# 1. Levantar PocketBase si no está corriendo
 if ! pgrep -f "pocketbase serve" >/dev/null 2>&1; then
     nohup ./pocketbase serve --http=127.0.0.1:8090 >/tmp/pocketbase.log 2>&1 &
     sleep 2
 fi
 
+# 2. Levantar Node si no está corriendo
 if ! pgrep -f "node index.js" >/dev/null 2>&1; then
     nohup node index.js >/tmp/tickets-api.log 2>&1 &
     sleep 2
 fi
 
+# 3. Abrir como ventana de aplicación
 URL="http://localhost:3000"
 if command -v chromium >/dev/null 2>&1; then
     chromium --app="$URL" --new-window >/dev/null 2>&1 &
