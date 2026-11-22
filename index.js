@@ -7,9 +7,10 @@ const app = express();
 const PORT = 3000;
 const POCKETBASE_URL = 'http://127.0.0.1:8090';
 const EVENTOS_FILE = path.join(__dirname, 'eventos_tickets.json');
+const USUARIOS_FILE = path.join(__dirname, 'usuarios_tickets.json');
+const BACKUPS_DIR = path.join(__dirname, 'backups');
 
-// PIN inicial de encargado (se puede ampliar con usuarios en el siguiente bloque)
-const PIN_ENCARGADO_DEFAULT = '1234';
+const ROLES_VALIDOS = ['ADMIN', 'GERENTE', 'CT_ASISTENTE'];
 
 process.on('uncaughtException', (err) => {
   console.error('💥 Error No Controlado:', err);
@@ -43,6 +44,127 @@ function guardarEventoLocal(evento) {
   eventos.unshift(evento);
   fs.writeFileSync(EVENTOS_FILE, JSON.stringify(eventos, null, 2), 'utf-8');
   return evento;
+}
+
+function leerUsuariosLocales() {
+  const iniciales = [
+    { id: 'USR-ADMIN', nombre: 'Administrador', usuario: 'admin', rol: 'ADMIN', pin: '9999', activo: true },
+    { id: 'USR-GERENTE', nombre: 'Gerente de Local', usuario: 'gerente', rol: 'GERENTE', pin: '1234', activo: true },
+    { id: 'USR-CT1', nombre: 'Asistente Turno', usuario: 'asistente', rol: 'CT_ASISTENTE', pin: '1111', activo: true }
+  ];
+
+  try {
+    if (!fs.existsSync(USUARIOS_FILE)) {
+      fs.writeFileSync(USUARIOS_FILE, JSON.stringify(iniciales, null, 2), 'utf-8');
+      return iniciales;
+    }
+    const raw = fs.readFileSync(USUARIOS_FILE, 'utf-8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) && data.length > 0 ? data : iniciales;
+  } catch (e) {
+    console.error('Error leyendo usuarios_tickets.json:', e.message);
+    return iniciales;
+  }
+}
+
+function guardarUsuariosLocales(lista) {
+  fs.writeFileSync(USUARIOS_FILE, JSON.stringify(lista, null, 2), 'utf-8');
+}
+
+function sanitizarUsuario(u) {
+  return {
+    id: u.id,
+    nombre: u.nombre,
+    usuario: u.usuario,
+    rol: u.rol,
+    activo: u.activo !== false
+  };
+}
+
+// US-19: Copia de seguridad local automática de todos los datos
+async function generarBackupLocal(motivo = 'automatico') {
+  try {
+    if (!fs.existsSync(BACKUPS_DIR)) {
+      fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+    }
+
+    let ticketsPB = [];
+    try {
+      const resp = await fetch(`${POCKETBASE_URL}/api/collections/tickets/records?sort=-created&perPage=500`);
+      if (resp.ok) {
+        const data = await resp.json();
+        ticketsPB = Array.isArray(data.items) ? data.items : [];
+      }
+    } catch (_) {
+      // Si PocketBase aún está iniciando, respaldamos igual los archivos locales
+    }
+
+    const eventos = leerEventosLocales();
+    const usuarios = leerUsuariosLocales();
+
+    const ahora = new Date();
+    const marcaTiempo = ahora.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const nombreArchivo = `backup_${marcaTiempo}.json`;
+    const rutaDestino = path.join(BACKUPS_DIR, nombreArchivo);
+
+    const snapshot = {
+      generado_en: ahora.toISOString(),
+      motivo,
+      totales: {
+        tickets_pocketbase: ticketsPB.length,
+        eventos_locales: eventos.length,
+        usuarios: usuarios.length
+      },
+      tickets_pocketbase: ticketsPB,
+      eventos_locales: eventos,
+      usuarios
+    };
+
+    fs.writeFileSync(rutaDestino, JSON.stringify(snapshot, null, 2), 'utf-8');
+
+    // Conservar solo los últimos 20 backups para mantener ordenado el disco
+    const archivos = fs.readdirSync(BACKUPS_DIR)
+      .filter(f => f.startsWith('backup_') && f.endsWith('.json'))
+      .sort()
+      .reverse();
+
+    if (archivos.length > 20) {
+      archivos.slice(20).forEach(viejo => {
+        try { fs.unlinkSync(path.join(BACKUPS_DIR, viejo)); } catch (_) {}
+      });
+    }
+
+    console.log(`💾 Backup local guardado (${motivo}): ${nombreArchivo}`);
+    return {
+      ok: true,
+      archivo: nombreArchivo,
+      generado_en: snapshot.generado_en,
+      totales: snapshot.totales
+    };
+  } catch (err) {
+    console.error('Error generando backup local:', err.message);
+    return { ok: false, error: err.message };
+  }
+}
+
+function listarBackupsLocales() {
+  try {
+    if (!fs.existsSync(BACKUPS_DIR)) return [];
+    return fs.readdirSync(BACKUPS_DIR)
+      .filter(f => f.startsWith('backup_') && f.endsWith('.json'))
+      .sort()
+      .reverse()
+      .map(archivo => {
+        const stats = fs.statSync(path.join(BACKUPS_DIR, archivo));
+        return {
+          archivo,
+          fecha: stats.mtime.toISOString(),
+          tamano_kb: Math.max(1, Math.round(stats.size / 1024))
+        };
+      });
+  } catch (_) {
+    return [];
+  }
 }
 
 function obtenerHoraLocalArgentina() {
@@ -80,19 +202,205 @@ function obtenerCAE(url) {
   return null;
 }
 
-// US-17, US-18, US-21, US-27, US-32: Anular ticket por CAE con PIN y motivo
+// US-19: Endpoints para consultar y generar backups locales
+app.get('/backups', (req, res) => {
+  res.json({
+    ok: true,
+    carpeta: BACKUPS_DIR,
+    backups: listarBackupsLocales()
+  });
+});
+
+app.post('/backups/ahora', async (req, res) => {
+  const resultado = await generarBackupLocal('manual');
+  if (!resultado.ok) {
+    return res.status(500).json(resultado);
+  }
+  return res.json({
+    ...resultado,
+    backups: listarBackupsLocales()
+  });
+});
+
+// US-34: Iniciar sesión con usuario y PIN
+app.post('/auth/login', (req, res) => {
+  const { usuario, pin } = req.body || {};
+  const userInput = String(usuario || '').trim().toLowerCase();
+  const pinInput = String(pin || '').trim();
+
+  if (!userInput || !pinInput) {
+    return res.status(400).json({ ok: false, error: 'Ingresá tu usuario y PIN.' });
+  }
+
+  const usuarios = leerUsuariosLocales();
+  const encontrado = usuarios.find(u => String(u.usuario).toLowerCase() === userInput);
+
+  if (!encontrado || String(encontrado.pin) !== pinInput) {
+    return res.status(401).json({ ok: false, error: 'Usuario o PIN incorrecto.' });
+  }
+
+  if (encontrado.activo === false) {
+    return res.status(403).json({ ok: false, error: 'Este usuario fue dado de baja y no puede ingresar.' });
+  }
+
+  return res.status(200).json({
+    ok: true,
+    usuario: sanitizarUsuario(encontrado)
+  });
+});
+
+app.get('/usuarios', (req, res) => {
+  const rolSolicitante = String(req.query.rol || '').toUpperCase();
+  if (rolSolicitante !== 'ADMIN' && rolSolicitante !== 'GERENTE') {
+    return res.status(403).json({ ok: false, error: 'No tenés permiso para ver el listado de usuarios.' });
+  }
+  const usuarios = leerUsuariosLocales().map(sanitizarUsuario);
+  return res.status(200).json({ ok: true, usuarios });
+});
+
+app.post('/usuarios', (req, res) => {
+  const { solicitanteId, nombre, usuario, rol, pin } = req.body || {};
+  const usuarios = leerUsuariosLocales();
+  const actor = usuarios.find(u => u.id === solicitanteId && u.activo !== false);
+
+  if (!actor) {
+    return res.status(401).json({ ok: false, error: 'Sesión no válida o usuario inactivo.' });
+  }
+
+  const rolNuevo = String(rol || '').toUpperCase();
+  const nombreLimpio = String(nombre || '').trim();
+  const userLimpio = String(usuario || '').trim().toLowerCase();
+  const pinLimpio = String(pin || '').trim();
+
+  if (!nombreLimpio || !userLimpio || !pinLimpio) {
+    return res.status(400).json({ ok: false, error: 'Completá nombre, usuario y PIN.' });
+  }
+
+  if (!ROLES_VALIDOS.includes(rolNuevo)) {
+    return res.status(400).json({ ok: false, error: 'Rol inválido.' });
+  }
+
+  if (actor.rol === 'ADMIN') {
+    if (rolNuevo !== 'GERENTE' && rolNuevo !== 'CT_ASISTENTE') {
+      return res.status(403).json({ ok: false, error: 'El Admin solo puede crear usuarios de Gerente o CT/Asistente.' });
+    }
+  } else if (actor.rol === 'GERENTE') {
+    if (rolNuevo !== 'CT_ASISTENTE') {
+      return res.status(403).json({ ok: false, error: 'El Gerente de local solo puede crear usuarios de CT o Asistente.' });
+    }
+  } else {
+    return res.status(403).json({ ok: false, error: 'Tu rol (CT / Asistente) no tiene permiso para crear usuarios.' });
+  }
+
+  if (usuarios.some(u => String(u.usuario).toLowerCase() === userLimpio)) {
+    return res.status(409).json({ ok: false, error: `El nombre de usuario "${userLimpio}" ya existe.` });
+  }
+
+  const nuevo = {
+    id: `USR-${Date.now().toString().slice(-6)}`,
+    nombre: nombreLimpio,
+    usuario: userLimpio,
+    rol: rolNuevo,
+    pin: pinLimpio,
+    activo: true
+  };
+
+  usuarios.push(nuevo);
+  guardarUsuariosLocales(usuarios);
+  generarBackupLocal('alta_usuario');
+
+  return res.status(201).json({
+    ok: true,
+    mensaje: `Usuario ${nuevo.usuario} (${nuevo.rol}) creado correctamente.`,
+    usuario: sanitizarUsuario(nuevo)
+  });
+});
+
+app.patch('/usuarios/:id/estado', (req, res) => {
+  const { id } = req.params;
+  const { solicitanteId, activo } = req.body || {};
+
+  const usuarios = leerUsuariosLocales();
+  const actor = usuarios.find(u => u.id === solicitanteId && u.activo !== false);
+
+  if (!actor || (actor.rol !== 'ADMIN' && actor.rol !== 'GERENTE')) {
+    return res.status(403).json({ ok: false, error: 'Solo Admin o Gerente de local pueden dar de baja o reactivar usuarios.' });
+  }
+
+  const objetivo = usuarios.find(u => u.id === id);
+  if (!objetivo) {
+    return res.status(404).json({ ok: false, error: 'Usuario no encontrado.' });
+  }
+
+  if (objetivo.id === actor.id) {
+    return res.status(400).json({ ok: false, error: 'No podés darte de baja a vos mismo.' });
+  }
+
+  if (actor.rol === 'GERENTE' && objetivo.rol !== 'CT_ASISTENTE') {
+    return res.status(403).json({ ok: false, error: 'El Gerente de local solo puede gestionar usuarios de CT / Asistente.' });
+  }
+
+  objetivo.activo = Boolean(activo);
+  guardarUsuariosLocales(usuarios);
+  generarBackupLocal('cambio_estado_usuario');
+
+  return res.status(200).json({
+    ok: true,
+    mensaje: objetivo.activo
+      ? `Usuario ${objetivo.usuario} reactivado.`
+      : `Usuario ${objetivo.usuario} dado de baja (su historial se conserva).`,
+    usuario: sanitizarUsuario(objetivo)
+  });
+});
+
+app.put('/usuarios/pin', (req, res) => {
+  const { usuarioId, pinActual, pinNuevo } = req.body || {};
+  const pinActualLimpio = String(pinActual || '').trim();
+  const pinNuevoLimpio = String(pinNuevo || '').trim();
+
+  if (!pinActualLimpio || !pinNuevoLimpio) {
+    return res.status(400).json({ ok: false, error: 'Completá tu PIN actual y el nuevo PIN.' });
+  }
+
+  if (pinNuevoLimpio.length < 4) {
+    return res.status(400).json({ ok: false, error: 'El nuevo PIN debe tener al menos 4 caracteres.' });
+  }
+
+  const usuarios = leerUsuariosLocales();
+  const userObj = usuarios.find(u => u.id === usuarioId && u.activo !== false);
+
+  if (!userObj) {
+    return res.status(404).json({ ok: false, error: 'Usuario no encontrado o inactivo.' });
+  }
+
+  if (String(userObj.pin) !== pinActualLimpio) {
+    return res.status(401).json({ ok: false, error: 'El PIN actual no coincide.' });
+  }
+
+  userObj.pin = pinNuevoLimpio;
+  guardarUsuariosLocales(usuarios);
+  generarBackupLocal('cambio_pin');
+
+  return res.status(200).json({
+    ok: true,
+    mensaje: 'PIN actualizado correctamente.'
+  });
+});
+
 app.post('/anular', async (req, res) => {
   const { cae, motivo, pin, encargado } = req.body || {};
 
   const caeLimpio = String(cae || '').trim();
   const motivoLimpio = String(motivo || '').trim();
   const pinLimpio = String(pin || '').trim();
-  const usuarioEncargado = String(encargado || 'Encargado').trim() || 'Encargado';
 
-  if (!pinLimpio || pinLimpio !== PIN_ENCARGADO_DEFAULT) {
+  const usuarios = leerUsuariosLocales();
+  const autorizador = usuarios.find(u => u.activo !== false && String(u.pin) === pinLimpio);
+
+  if (!pinLimpio || !autorizador) {
     return res.status(401).json({
       ok: false,
-      error: 'PIN de encargado inválido. Verificá tu clave para anular.'
+      error: 'PIN inválido o usuario inactivo. No se autorizó la anulación.'
     });
   }
 
@@ -121,6 +429,7 @@ app.post('/anular', async (req, res) => {
 
   const horaActual = obtenerHoraLocalArgentina();
   const ahoraISO = new Date().toISOString();
+  const nombreEncargado = String(encargado || '').trim() || `${autorizador.nombre} (${autorizador.usuario})`;
 
   const registroAnulacion = guardarEventoLocal({
     id: `ANU-${Date.now().toString().slice(-6)}`,
@@ -129,20 +438,21 @@ app.post('/anular', async (req, res) => {
     created: ahoraISO,
     estado: 'ANULADO',
     motivo: motivoLimpio,
-    encargado: usuarioEncargado,
-    detalle: `Anulado por ${usuarioEncargado} • Motivo: ${motivoLimpio}`
+    encargado: nombreEncargado,
+    detalle: `Anulado por ${nombreEncargado} • Motivo: ${motivoLimpio}`
   });
 
-  console.log(`🚫 ANULADO: CAE ${caeLimpio} a las ${horaActual} por ${usuarioEncargado} (${motivoLimpio})`);
+  generarBackupLocal('anulacion_ticket');
+
+  console.log(`🚫 ANULADO: CAE ${caeLimpio} a las ${horaActual} por ${nombreEncargado} (${motivoLimpio})`);
 
   return res.status(200).json({
     ok: true,
-    mensaje: `Ticket CAE ${caeLimpio} marcado como ANULADO.`,
+    mensaje: `Ticket CAE ${caeLimpio} marcado como ANULADO por ${nombreEncargado}.`,
     anulacion: registroAnulacion
   });
 });
 
-// Ruta de validación para la ESP32 / QR
 app.get('/validar', async (req, res) => {
   const urlQr = req.query.url;
   const esConfirmacion = req.query.entregar === 'true';
@@ -164,7 +474,6 @@ app.get('/validar', async (req, res) => {
     const horaActual = obtenerHoraLocalArgentina();
     const ahoraISO = new Date().toISOString();
 
-    // 0. Verificar si el CAE fue marcado como ANULADO
     const eventos = leerEventosLocales();
     const anulado = eventos.find(e => String(e.cae) === String(cae) && e.estado === 'ANULADO');
     if (anulado) {
@@ -178,7 +487,6 @@ app.get('/validar', async (req, res) => {
       });
     }
 
-    // 1. Consultar en PocketBase si el ticket ya fue entregado previamente
     const responseCheck = await fetch(`${POCKETBASE_URL}/api/collections/tickets/records?filter=(cae='${cae}')`);
     const dataCheck = await responseCheck.json();
 
@@ -224,6 +532,7 @@ app.get('/validar', async (req, res) => {
       }
 
       const nuevoTicket = JSON.parse(responseText);
+      generarBackupLocal('ticket_entregado');
       console.log(`✅ ÉXITO: Ticket CAE ${cae} guardado en PocketBase a las ${horaActual}`);
 
       return res.status(200).json({
@@ -254,7 +563,6 @@ app.get('/validar', async (req, res) => {
   }
 });
 
-// Ruta para historial unificado
 app.get('/historial', async (req, res) => {
   try {
     const response = await fetch(`${POCKETBASE_URL}/api/collections/tickets/records?sort=-created&perPage=500`);
@@ -324,6 +632,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(` Servidor API activo en http://localhost:${PORT}`);
   console.log(` Conectado a PocketBase (${POCKETBASE_URL})`);
   console.log(`==============================================`);
+  setTimeout(() => generarBackupLocal('inicio_servidor'), 2000);
+  setInterval(() => generarBackupLocal('programado_30min'), 30 * 60 * 1000);
 });
 
 server.on('error', (err) => {

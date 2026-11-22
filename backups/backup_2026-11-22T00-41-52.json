@@ -1,0 +1,83 @@
+{
+  "generado_en": "2026-11-22T00:41:52.957Z",
+  "motivo": "inicio_servidor",
+  "totales": {
+    "tickets_pocketbase": 5,
+    "eventos_locales": 0,
+    "usuarios": 3
+  },
+  "tickets_pocketbase": [
+    {
+      "cae": "86439347581923",
+      "collectionId": "bjjjqpol3h9rl11",
+      "collectionName": "tickets",
+      "created": "2026-11-03 22:28:32.084Z",
+      "fecha": "19:28:32",
+      "id": "vdoxx3a7ss3t645",
+      "updated": "2026-11-03 22:28:32.084Z"
+    },
+    {
+      "cae": "86439904415195",
+      "collectionId": "bjjjqpol3h9rl11",
+      "collectionName": "tickets",
+      "created": "2026-11-03 22:28:00.261Z",
+      "fecha": "19:28:00",
+      "id": "onmyhzclg1t11b4",
+      "updated": "2026-11-03 22:28:00.261Z"
+    },
+    {
+      "cae": "86439348159276",
+      "collectionId": "bjjjqpol3h9rl11",
+      "collectionName": "tickets",
+      "created": "2026-11-03 22:20:19.390Z",
+      "fecha": "19:20:19",
+      "id": "a9njf7upz9fink2",
+      "updated": "2026-11-03 22:20:19.390Z"
+    },
+    {
+      "cae": "86439900726984",
+      "collectionId": "bjjjqpol3h9rl11",
+      "collectionName": "tickets",
+      "created": "2026-11-03 22:15:53.703Z",
+      "fecha": "19:15:53",
+      "id": "ieiwlxig4lmcdrl",
+      "updated": "2026-11-03 22:15:53.703Z"
+    },
+    {
+      "cae": "86439906717894",
+      "collectionId": "bjjjqpol3h9rl11",
+      "collectionName": "tickets",
+      "created": "2026-11-03 22:13:32.984Z",
+      "fecha": "19:13:32",
+      "id": "4o8o9yp5tixzlnk",
+      "updated": "2026-11-03 22:13:32.984Z"
+    }
+  ],
+  "eventos_locales": [],
+  "usuarios": [
+    {
+      "id": "USR-ADMIN",
+      "nombre": "Administrador",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pin": "9990",
+      "activo": true
+    },
+    {
+      "id": "USR-GERENTE",
+      "nombre": "Gerente de Local",
+      "usuario": "gerente",
+      "rol": "GERENTE",
+      "pin": "1234",
+      "activo": true
+    },
+    {
+      "id": "USR-CT1",
+      "nombre": "Asistente Turno",
+      "usuario": "asistente",
+      "rol": "CT_ASISTENTE",
+      "pin": "1111",
+      "activo": true
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "USR-ADMIN",
+    "nombre": "Administrador",
+    "usuario": "admin",
+    "rol": "ADMIN",
+    "pin": "9990",
+    "activo": true
+  },
+  {
+    "id": "USR-GERENTE",
+    "nombre": "Gerente de Local",
+    "usuario": "gerente",
+    "rol": "GERENTE",
+    "pin": "1234",
+    "activo": true
+  },
+  {
+    "id": "USR-CT1",
+    "nombre": "Asistente Turno",
+    "usuario": "asistente",
+    "rol": "CT_ASISTENTE",
+    "pin": "1111",
+    "activo": true
+  }
+]

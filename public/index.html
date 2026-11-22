@@ -66,21 +66,70 @@
                </div>
            </div>
 
-           <div class="flex items-center space-x-3">
-               <div class="flex items-center space-x-2 bg-carbonDark px-3.5 py-1.5 rounded-full border border-carbonBorder">
+           <div class="flex items-center space-x-2 sm:space-x-3">
+               <div id="badge-sesion" class="hidden sm:flex items-center gap-2 bg-carbonDark px-3.5 py-1.5 rounded-full border border-carbonBorder text-xs">
+                   <i class="fa-solid fa-user-shield text-mostazaRed"></i>
+                   <span id="sesion-nombre-rol" class="font-semibold text-white">Sin sesión</span>
+               </div>
+               <button onclick="abrirModalLogin()" class="bg-mostazaRed hover:bg-mostazaRedHover text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
+                   <i class="fa-solid fa-right-to-bracket"></i>
+                   <span id="btn-login-texto">Ingresar</span>
+               </button>
+               <div class="flex items-center space-x-2 bg-carbonDark px-3 py-1.5 rounded-full border border-carbonBorder">
                    <span class="relative flex h-2.5 w-2.5">
                      <span id="api-ping-dot" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                      <span id="api-status-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                    </span>
                    <span id="api-status-text" class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400">API Conectada</span>
                </div>
-               <button onclick="cargarDatosAPI()" class="bg-carbonDark border border-carbonBorder hover:border-mostazaRed text-neutral-300 hover:text-white px-3.5 py-1.5 rounded-xl text-xs transition flex items-center space-x-2">
+               <button onclick="cargarDatosAPI()" class="bg-carbonDark border border-carbonBorder hover:border-mostazaRed text-neutral-300 hover:text-white px-3 py-1.5 rounded-xl text-xs transition flex items-center space-x-1.5">
                    <i class="fa-solid fa-rotate"></i>
-                   <span>Actualizar</span>
+                   <span class="hidden md:inline">Actualizar</span>
                </button>
            </div>
        </div>
    </header>
+
+   <!-- MODAL DE INICIO DE SESIÓN -->
+   <div id="modal-login" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+       <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 w-full max-w-md space-y-5 shadow-2xl">
+           <div class="flex items-center justify-between">
+               <div>
+                   <span class="text-[11px] font-bold uppercase tracking-wider text-mostazaRed">Acceso por Rol</span>
+                   <h3 class="font-brand font-bold text-xl uppercase mt-0.5">Iniciar Sesión</h3>
+               </div>
+               <button type="button" onclick="cerrarModalLogin()" class="text-neutral-400 hover:text-white p-1">
+                   <i class="fa-solid fa-xmark text-lg"></i>
+               </button>
+           </div>
+
+           <form onsubmit="enviarLogin(event)" class="space-y-4">
+               <div>
+                   <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Usuario</label>
+                   <input id="login-usuario" type="text" required placeholder="Ej: gerente, admin, asistente" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+               </div>
+               <div>
+                   <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">PIN</label>
+                   <input id="login-pin" type="password" required placeholder="Tu PIN" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+               </div>
+
+               <div id="mensaje-login" class="hidden text-xs font-mono px-3.5 py-2.5 rounded-xl border bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40"></div>
+
+               <button type="submit" class="w-full bg-mostazaRed hover:bg-mostazaRedHover text-white font-semibold py-2.5 rounded-2xl text-sm transition">
+                   Entrar al Sistema
+               </button>
+           </form>
+
+           <div class="border-t border-carbonBorder pt-4 space-y-2">
+               <p class="text-[11px] text-neutral-400 uppercase tracking-wider">Acceso rápido de prueba:</p>
+               <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+                   <button type="button" onclick="autocompletarDemo('admin', '9999')" class="bg-carbonDark hover:border-mostazaRed border border-carbonBorder rounded-xl py-2 text-neutral-300">Admin</button>
+                   <button type="button" onclick="autocompletarDemo('gerente', '1234')" class="bg-carbonDark hover:border-mostazaRed border border-carbonBorder rounded-xl py-2 text-neutral-300">Gerente</button>
+                   <button type="button" onclick="autocompletarDemo('asistente', '1111')" class="bg-carbonDark hover:border-mostazaRed border border-carbonBorder rounded-xl py-2 text-neutral-300">CT / Asist.</button>
+               </div>
+           </div>
+       </div>
+   </div>
 
    <div class="flex-grow flex flex-col md:flex-row">
        <aside class="w-full md:w-64 bg-carbonCard border-b md:border-b-0 md:border-r border-carbonBorder p-3 md:p-4 flex md:flex-col gap-2 overflow-x-auto shrink-0">
@@ -98,11 +147,15 @@
            </button>
            <button data-tab="estadisticas" onclick="cambiarSeccion('estadisticas')" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition whitespace-nowrap text-neutral-400 hover:text-white hover:bg-carbonDark">
                <i class="fa-solid fa-chart-line w-4 text-center"></i>
-               <span>Estadísticas y Picos</span>
+               <span>Estadísticas y Backups</span>
            </button>
            <button data-tab="historial" onclick="cambiarSeccion('historial')" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition whitespace-nowrap text-neutral-400 hover:text-white hover:bg-carbonDark">
                <i class="fa-solid fa-clock-rotate-left w-4 text-center"></i>
                <span>Historial Completo</span>
+           </button>
+           <button data-tab="usuarios" onclick="cambiarSeccion('usuarios')" class="nav-btn flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition whitespace-nowrap text-neutral-400 hover:text-white hover:bg-carbonDark">
+               <i class="fa-solid fa-users-gear w-4 text-center"></i>
+               <span>Usuarios y PIN</span>
            </button>
        </aside>
 
@@ -278,17 +331,16 @@
                </div>
            </section>
 
-           <!-- SECCIÓN 3: ANULAR TICKET (US-17, US-18, US-21, US-22, US-27, US-32) -->
+           <!-- SECCIÓN 3: ANULAR TICKET -->
            <section id="seccion-anular" class="seccion-panel hidden space-y-6">
                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                   <!-- Formulario de Anulación con PIN y Motivo -->
                    <form onsubmit="enviarAnulacionTicket(event)" class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-4 shadow-xl">
                        <div>
                            <span class="bg-mostazaRed/20 text-mostazaRed border border-mostazaRed/40 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full inline-block">
-                               Control de Encargado
+                               Control de Anulación
                            </span>
                            <h3 class="font-brand font-bold text-xl uppercase tracking-wide mt-2">Anular Ticket por CAE</h3>
-                           <p class="text-xs text-neutral-400 mt-1">Bloquea el CAE para que no pueda validarse y registra quién lo anuló y por qué.</p>
+                           <p class="text-xs text-neutral-400 mt-1">Bloquea el CAE y registra encargado, motivo, fecha y hora exacta.</p>
                        </div>
 
                        <div>
@@ -299,17 +351,17 @@
                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                            <div>
                                <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Encargado / Usuario</label>
-                               <input id="anular-encargado" type="text" value="Encargado" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none" />
+                               <input id="anular-encargado" type="text" value="Gerente de Local (gerente)" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none" />
                            </div>
                            <div>
-                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">PIN de Encargado (US-18)</label>
-                               <input id="anular-pin" type="password" required placeholder="PIN (ej: 1234)" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">PIN de Autorización</label>
+                               <input id="anular-pin" type="password" required placeholder="PIN del usuario" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
                            </div>
                        </div>
 
                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                            <div>
-                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Motivo Rápido (US-32)</label>
+                               <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Motivo Rápido</label>
                                <select id="anular-motivo-preset" onchange="aplicarMotivoPreset()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none">
                                    <option value="Devolución de dinero">Devolución de dinero</option>
                                    <option value="Error de cajero">Error de cajero</option>
@@ -331,7 +383,6 @@
                        </button>
                    </form>
 
-                   <!-- US-22 y US-27: Alerta de jornada y Anulaciones por Encargado -->
                    <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-5 shadow-xl">
                        <div class="flex items-center justify-between border-b border-carbonBorder pb-4">
                            <div>
@@ -339,12 +390,12 @@
                                <p class="text-xs text-neutral-400 mt-0.5">Control rápido de cancelaciones del día y por encargado.</p>
                            </div>
                            <span id="badge-alerta-jornada" class="text-xs font-mono px-3.5 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                               Jornada normal
+                               0 anulaciones hoy
                            </span>
                        </div>
 
                        <div>
-                           <h4 class="text-xs uppercase tracking-wider text-neutral-400 mb-2.5">Anulaciones por Encargado (US-27)</h4>
+                           <h4 class="text-xs uppercase tracking-wider text-neutral-400 mb-2.5">Anulaciones por Encargado</h4>
                            <div id="lista-anulaciones-encargado" class="space-y-2">
                                <p class="text-xs text-neutral-500 font-mono">Sin anulaciones registradas todavía.</p>
                            </div>
@@ -352,7 +403,6 @@
                    </div>
                </div>
 
-               <!-- US-21 y US-27: Listado detallado de tickets anulados -->
                <div class="bg-carbonCard border border-carbonBorder rounded-3xl overflow-hidden shadow-xl">
                    <div class="p-6 border-b border-carbonBorder flex items-center justify-between">
                        <div>
@@ -377,8 +427,49 @@
                </div>
            </section>
 
-           <!-- SECCIÓN 4: ESTADÍSTICAS Y PICOS -->
+           <!-- SECCIÓN 4: ESTADÍSTICAS, COMPARADOR (US-25) Y BACKUPS LOCALES (US-19) -->
            <section id="seccion-estadisticas" class="seccion-panel hidden space-y-6">
+               <!-- US-25: Comparar cantidad de tickets validados entre dos días o semanas -->
+               <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-5 shadow-xl">
+                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-carbonBorder pb-4">
+                       <div>
+                           <h3 class="font-brand font-bold text-lg uppercase tracking-wide">Comparador de Movimiento (Días o Semanas)</h3>
+                           <p class="text-xs text-neutral-400 mt-0.5">Compará tickets validados entre dos días o dos semanas distintas para ver si subió o bajó el movimiento.</p>
+                       </div>
+                       <select id="comparador-modo" onchange="renderizarComparador()" class="bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2 text-xs font-semibold text-white outline-none">
+                           <option value="DIA">Comparar 2 Días</option>
+                           <option value="SEMANA">Comparar 2 Semanas</option>
+                       </select>
+                   </div>
+
+                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                           <label id="label-comp-a" class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Día A (Anterior)</label>
+                           <input id="comp-fecha-a" type="date" onchange="renderizarComparador()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+                       </div>
+                       <div>
+                           <label id="label-comp-b" class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Día B (Actual / Comparar)</label>
+                           <input id="comp-fecha-b" type="date" onchange="renderizarComparador()" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+                       </div>
+                   </div>
+
+                   <div id="resultado-comparador" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       <div class="bg-carbonDark border border-carbonBorder rounded-2xl p-4">
+                           <p id="comp-titulo-a" class="text-xs font-mono text-neutral-400">Período A</p>
+                           <p id="comp-valor-a" class="text-2xl font-brand font-bold text-white mt-1">0 tickets</p>
+                       </div>
+                       <div class="bg-carbonDark border border-carbonBorder rounded-2xl p-4">
+                           <p id="comp-titulo-b" class="text-xs font-mono text-neutral-400">Período B</p>
+                           <p id="comp-valor-b" class="text-2xl font-brand font-bold text-white mt-1">0 tickets</p>
+                       </div>
+                       <div class="bg-carbonDark border border-carbonBorder rounded-2xl p-4">
+                           <p class="text-xs font-mono text-neutral-400">Variación del Movimiento</p>
+                           <p id="comp-variacion" class="text-lg font-brand font-bold text-emerald-400 mt-1">Seleccioná dos fechas</p>
+                           <p id="comp-variacion-desc" class="text-[11px] text-neutral-500 mt-0.5">Comparación de tickets validados</p>
+                       </div>
+                   </div>
+               </div>
+
                <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-4 shadow-xl">
                    <div class="flex items-center justify-between border-b border-carbonBorder pb-3">
                        <div>
@@ -405,6 +496,23 @@
                            <p class="text-xs text-neutral-400 mt-0.5">Ranking de días con mayor cantidad de tickets entregados.</p>
                        </div>
                        <div id="lista-dias-ventas" class="space-y-2.5"></div>
+                   </div>
+               </div>
+
+               <!-- US-19: Copias de Seguridad Locales Automáticas -->
+               <div class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-4 shadow-xl">
+                   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-carbonBorder pb-4">
+                       <div>
+                           <h3 class="font-brand font-bold text-lg uppercase tracking-wide">Copias de Seguridad Locales Automáticas</h3>
+                           <p class="text-xs text-neutral-400 mt-0.5">Respaldo automático en carpeta local <code class="text-emerald-400">backups/</code> ante cierres o fallos inesperados.</p>
+                       </div>
+                       <button type="button" onclick="ejecutarBackupManual()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 self-start sm:self-auto">
+                           <i class="fa-solid fa-floppy-disk"></i>
+                           <span>Crear Backup Ahora</span>
+                       </button>
+                   </div>
+                   <div id="lista-backups-locales" class="space-y-2 text-xs font-mono text-neutral-400">
+                       Cargando copias de seguridad locales...
                    </div>
                </div>
            </section>
@@ -448,6 +556,108 @@
                </div>
            </section>
 
+           <!-- SECCIÓN 6: USUARIOS Y CAMBIO DE PIN -->
+           <section id="seccion-usuarios" class="seccion-panel hidden space-y-6">
+               <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                   <form onsubmit="enviarCambioPin(event)" class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-4 shadow-xl">
+                       <div>
+                           <span class="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full inline-block">
+                               Seguridad de Cuenta
+                           </span>
+                           <h3 class="font-brand font-bold text-xl uppercase tracking-wide mt-2">Cambiar Mi PIN</h3>
+                           <p class="text-xs text-neutral-400 mt-1">Actualizá tu clave actual desde tu usuario en la aplicación.</p>
+                       </div>
+
+                       <div>
+                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">PIN Actual</label>
+                           <input id="pin-actual" type="password" required placeholder="Tu PIN actual" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+                       </div>
+
+                       <div>
+                           <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1.5">Nuevo PIN (mín. 4 dígitos)</label>
+                           <input id="pin-nuevo" type="password" required minlength="4" placeholder="Nuevo PIN" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-4 py-2.5 text-sm text-white outline-none font-mono" />
+                       </div>
+
+                       <div id="mensaje-pin" class="hidden text-xs font-mono px-4 py-3 rounded-2xl border"></div>
+
+                       <button type="submit" class="w-full bg-mostazaRed hover:bg-mostazaRedHover text-white font-semibold py-2.5 rounded-2xl text-sm transition">
+                           Guardar Nuevo PIN
+                       </button>
+                   </form>
+
+                   <div id="panel-crear-usuario" class="bg-carbonCard border border-carbonBorder rounded-3xl p-6 space-y-4 shadow-xl">
+                       <div>
+                           <span class="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full inline-block">
+                               Gestión de Personal
+                           </span>
+                           <h3 class="font-brand font-bold text-xl uppercase tracking-wide mt-2">Crear Usuario</h3>
+                           <p id="descripcion-crear-usuario" class="text-xs text-neutral-400 mt-1">Iniciá sesión como Admin o Gerente de local para crear usuarios.</p>
+                       </div>
+
+                       <form id="form-crear-usuario" onsubmit="enviarCrearUsuario(event)" class="space-y-3.5">
+                           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <div>
+                                   <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Nombre</label>
+                                   <input id="nuevo-usr-nombre" type="text" required placeholder="Ej: Lucía Gómez" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2 text-sm text-white outline-none" />
+                               </div>
+                               <div>
+                                   <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Usuario</label>
+                                   <input id="nuevo-usr-login" type="text" required placeholder="Ej: lucia" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2 text-sm text-white outline-none font-mono" />
+                               </div>
+                           </div>
+
+                           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <div>
+                                   <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">Rol</label>
+                                   <select id="nuevo-usr-rol" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2 text-sm text-white outline-none">
+                                       <option value="CT_ASISTENTE">CT / Asistente</option>
+                                       <option value="GERENTE">Gerente de local</option>
+                                   </select>
+                               </div>
+                               <div>
+                                   <label class="block text-xs uppercase tracking-wider text-neutral-400 mb-1">PIN Inicial</label>
+                                   <input id="nuevo-usr-pin" type="password" required minlength="4" placeholder="Ej: 2222" class="w-full bg-carbonDark border border-carbonBorder focus:border-mostazaRed rounded-xl px-3.5 py-2 text-sm text-white outline-none font-mono" />
+                               </div>
+                           </div>
+
+                           <div id="mensaje-crear-usuario" class="hidden text-xs font-mono px-3.5 py-2.5 rounded-2xl border"></div>
+
+                           <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-2xl text-sm transition">
+                               Crear Usuario
+                           </button>
+                       </form>
+
+                       <div id="aviso-sin-permiso-usuarios" class="hidden bg-carbonDark border border-carbonBorder rounded-2xl p-4 text-xs text-neutral-400">
+                           Tu perfil actual es <strong class="text-white">CT / Asistente</strong>: podés consultar la información habilitada y anular tickets, pero no podés crear ni dar de baja usuarios.
+                       </div>
+                   </div>
+               </div>
+
+               <div id="panel-lista-usuarios" class="bg-carbonCard border border-carbonBorder rounded-3xl overflow-hidden shadow-xl">
+                   <div class="p-6 border-b border-carbonBorder flex items-center justify-between">
+                       <div>
+                           <h3 class="font-brand font-bold text-lg uppercase tracking-wide">Usuarios del Local (Baja / Reactivación)</h3>
+                           <p class="text-xs text-neutral-400 mt-0.5">Dar de baja desactiva el acceso del ex empleado conservando todo su historial.</p>
+                       </div>
+                   </div>
+                   <div class="overflow-x-auto">
+                       <table class="w-full text-left border-collapse">
+                           <thead>
+                               <tr class="border-b border-carbonBorder text-neutral-400 text-xs uppercase tracking-wider bg-carbonDark/50">
+                                   <th class="py-3.5 px-6">Nombre / Usuario</th>
+                                   <th class="py-3.5 px-6">Rol</th>
+                                   <th class="py-3.5 px-6">Estado</th>
+                                   <th class="py-3.5 px-6">Acción</th>
+                               </tr>
+                           </thead>
+                           <tbody id="tabla-usuarios" class="divide-y divide-carbonBorder text-sm">
+                               <tr><td colspan="4" class="py-8 text-center text-neutral-500">Iniciá sesión como Gerente o Admin para administrar usuarios.</td></tr>
+                           </tbody>
+                       </table>
+                   </div>
+               </div>
+           </section>
+
        </main>
    </div>
 
@@ -455,6 +665,7 @@
     const API_ENDPOINT = "/historial";
     let ticketsCargados = [];
     let ticketsFiltradosActuales = [];
+    let usuarioActual = null;
 
     function cambiarSeccion(nombreSeccion) {
         document.querySelectorAll('.seccion-panel').forEach(panel => {
@@ -470,6 +681,421 @@
                 btn.className = "nav-btn flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition whitespace-nowrap text-neutral-400 hover:text-white hover:bg-carbonDark";
             }
         });
+
+        if (nombreSeccion === 'usuarios') {
+            actualizarPermisosUsuariosUI();
+            cargarUsuariosSiCorresponde();
+        }
+        if (nombreSeccion === 'estadisticas') {
+            cargarBackupsLocales();
+            renderizarComparador();
+        }
+    }
+
+    // US-19: Cargar y crear backups locales
+    async function cargarBackupsLocales() {
+        const cont = document.getElementById('lista-backups-locales');
+        if (!cont) return;
+        try {
+            const resp = await fetch('/backups');
+            const data = await resp.json();
+            const lista = Array.isArray(data.backups) ? data.backups : [];
+            if (lista.length === 0) {
+                cont.innerHTML = `<p>Aún no hay archivos en la carpeta local backups/.</p>`;
+                return;
+            }
+            cont.innerHTML = lista.slice(0, 6).map(b => `
+                <div class="flex items-center justify-between bg-carbonDark border border-carbonBorder rounded-2xl px-4 py-2.5">
+                    <span class="text-white">${b.archivo}</span>
+                    <span class="text-emerald-400">${new Date(b.fecha).toLocaleString('es-AR')} • ${b.tamano_kb} KB</span>
+                </div>
+            `).join('');
+        } catch (err) {
+            cont.innerHTML = `<p class="text-mostazaRed">No se pudo leer la lista de backups locales.</p>`;
+        }
+    }
+
+    async function ejecutarBackupManual() {
+        try {
+            const resp = await fetch('/backups/ahora', { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok && data.ok) {
+                await cargarBackupsLocales();
+            }
+        } catch (err) {
+            alert('Error al generar la copia de seguridad local.');
+        }
+    }
+
+    // US-25: Comparar dos días o dos semanas
+    function obtenerRangoSemanaISO(fechaISO) {
+        const base = new Date(`${fechaISO}T12:00:00`);
+        if (Number.isNaN(base.getTime())) return null;
+        const diaSemana = base.getDay(); // 0 domingo .. 6 sabado
+        const diffLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+        const lunes = new Date(base);
+        lunes.setDate(base.getDate() + diffLunes);
+        const domingo = new Date(lunes);
+        domingo.setDate(lunes.getDate() + 6);
+
+        const aISO = d => d.toISOString().slice(0, 10);
+        return { inicio: aISO(lunes), fin: aISO(domingo) };
+    }
+
+    function renderizarComparador() {
+        const modo = document.getElementById('comparador-modo')?.value || 'DIA';
+        const fechaA = document.getElementById('comp-fecha-a')?.value || '';
+        const fechaB = document.getElementById('comp-fecha-b')?.value || '';
+
+        const labelA = document.getElementById('label-comp-a');
+        const labelB = document.getElementById('label-comp-b');
+        const titA = document.getElementById('comp-titulo-a');
+        const titB = document.getElementById('comp-titulo-b');
+        const valA = document.getElementById('comp-valor-a');
+        const valB = document.getElementById('comp-valor-b');
+        const varEl = document.getElementById('comp-variacion');
+        const varDesc = document.getElementById('comp-variacion-desc');
+
+        if (modo === 'SEMANA') {
+            labelA.innerText = 'Fecha dentro de Semana A';
+            labelB.innerText = 'Fecha dentro de Semana B';
+        } else {
+            labelA.innerText = 'Día A (Anterior)';
+            labelB.innerText = 'Día B (Comparar)';
+        }
+
+        const soloEntregados = ticketsCargados.filter(t => (t.estado || 'ENTREGADO') === 'ENTREGADO');
+
+        let cantA = 0;
+        let cantB = 0;
+
+        if (fechaA) {
+            if (modo === 'SEMANA') {
+                const rA = obtenerRangoSemanaISO(fechaA);
+                titA.innerText = rA ? `Semana ${rA.inicio} al ${rA.fin}` : 'Semana A';
+                cantA = rA ? soloEntregados.filter(t => {
+                    const f = obtenerFechaISOTicket(t);
+                    return f && f >= rA.inicio && f <= rA.fin;
+                }).length : 0;
+            } else {
+                titA.innerText = `Día ${fechaA}`;
+                cantA = soloEntregados.filter(t => obtenerFechaISOTicket(t) === fechaA).length;
+            }
+        } else {
+            titA.innerText = modo === 'SEMANA' ? 'Semana A' : 'Día A';
+        }
+
+        if (fechaB) {
+            if (modo === 'SEMANA') {
+                const rB = obtenerRangoSemanaISO(fechaB);
+                titB.innerText = rB ? `Semana ${rB.inicio} al ${rB.fin}` : 'Semana B';
+                cantB = rB ? soloEntregados.filter(t => {
+                    const f = obtenerFechaISOTicket(t);
+                    return f && f >= rB.inicio && f <= rB.fin;
+                }).length : 0;
+            } else {
+                titB.innerText = `Día ${fechaB}`;
+                cantB = soloEntregados.filter(t => obtenerFechaISOTicket(t) === fechaB).length;
+            }
+        } else {
+            titB.innerText = modo === 'SEMANA' ? 'Semana B' : 'Día B';
+        }
+
+        valA.innerText = `${cantA} ${cantA === 1 ? 'ticket' : 'tickets'}`;
+        valB.innerText = `${cantB} ${cantB === 1 ? 'ticket' : 'tickets'}`;
+
+        if (!fechaA || !fechaB) {
+            varEl.className = "text-lg font-brand font-bold text-neutral-400 mt-1";
+            varEl.innerText = "Seleccioná ambas fechas";
+            varDesc.innerText = "Comparación de tickets validados";
+            return;
+        }
+
+        const diff = cantB - cantA;
+        if (diff > 0) {
+            const pct = cantA > 0 ? Math.round((diff / cantA) * 100) : 100;
+            varEl.className = "text-lg font-brand font-bold text-emerald-400 mt-1";
+            varEl.innerText = `+${diff} tickets (+${pct}%)`;
+            varDesc.innerText = "Subió el movimiento respecto al período A.";
+        } else if (diff < 0) {
+            const pct = cantA > 0 ? Math.round((Math.abs(diff) / cantA) * 100) : 100;
+            varEl.className = "text-lg font-brand font-bold text-mostazaRed mt-1";
+            varEl.innerText = `${diff} tickets (-${pct}%)`;
+            varDesc.innerText = "Bajó el movimiento respecto al período A.";
+        } else {
+            varEl.className = "text-lg font-brand font-bold text-amber-400 mt-1";
+            varEl.innerText = "0 (Sin cambios)";
+            varDesc.innerText = "Misma cantidad de tickets validados.";
+        }
+    }
+
+    function abrirModalLogin() {
+        document.getElementById('mensaje-login').classList.add('hidden');
+        document.getElementById('modal-login').classList.remove('hidden');
+        document.getElementById('modal-login').classList.add('flex');
+    }
+
+    function cerrarModalLogin() {
+        document.getElementById('modal-login').classList.add('hidden');
+        document.getElementById('modal-login').classList.remove('flex');
+    }
+
+    function autocompletarDemo(user, pin) {
+        document.getElementById('login-usuario').value = user;
+        document.getElementById('login-pin').value = pin;
+    }
+
+    async function enviarLogin(event) {
+        event.preventDefault();
+        const usuario = document.getElementById('login-usuario').value.trim();
+        const pin = document.getElementById('login-pin').value.trim();
+        const msg = document.getElementById('mensaje-login');
+
+        try {
+            const resp = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, pin })
+            });
+            const data = await resp.json();
+
+            if (!resp.ok || !data.ok) {
+                msg.classList.remove('hidden');
+                msg.innerText = data.error || 'Error al iniciar sesión.';
+                return;
+            }
+
+            usuarioActual = data.usuario;
+            aplicarSesionEnInterfaz();
+            cerrarModalLogin();
+            await cargarUsuariosSiCorresponde();
+        } catch (err) {
+            msg.classList.remove('hidden');
+            msg.innerText = 'Error de conexión al iniciar sesión.';
+        }
+    }
+
+    function aplicarSesionEnInterfaz() {
+        const badge = document.getElementById('badge-sesion');
+        const textoRol = document.getElementById('sesion-nombre-rol');
+        const btnLogin = document.getElementById('btn-login-texto');
+        const inputEncargado = document.getElementById('anular-encargado');
+
+        if (!usuarioActual) {
+            badge.classList.add('hidden');
+            btnLogin.innerText = 'Ingresar';
+            actualizarPermisosUsuariosUI();
+            return;
+        }
+
+        const etiquetaRol = usuarioActual.rol === 'ADMIN'
+            ? 'Admin'
+            : usuarioActual.rol === 'GERENTE'
+                ? 'Gerente de local'
+                : 'CT / Asistente';
+
+        badge.classList.remove('hidden');
+        textoRol.innerText = `${usuarioActual.nombre} (${etiquetaRol})`;
+        btnLogin.innerText = 'Cambiar usuario';
+
+        if (inputEncargado) {
+            inputEncargado.value = `${usuarioActual.nombre} (${usuarioActual.usuario})`;
+        }
+
+        actualizarPermisosUsuariosUI();
+    }
+
+    function actualizarPermisosUsuariosUI() {
+        const formCrear = document.getElementById('form-crear-usuario');
+        const avisoSinPermiso = document.getElementById('aviso-sin-permiso-usuarios');
+        const descCrear = document.getElementById('descripcion-crear-usuario');
+        const selectRol = document.getElementById('nuevo-usr-rol');
+        const panelLista = document.getElementById('panel-lista-usuarios');
+
+        if (!usuarioActual || usuarioActual.rol === 'CT_ASISTENTE') {
+            formCrear.classList.add('hidden');
+            avisoSinPermiso.classList.remove('hidden');
+            descCrear.innerText = 'Solo Admin o Gerente de local pueden crear usuarios.';
+            if (panelLista && !usuarioActual) {
+                document.getElementById('tabla-usuarios').innerHTML =
+                    `<tr><td colspan="4" class="py-8 text-center text-neutral-500">Iniciá sesión como Gerente o Admin para administrar usuarios.</td></tr>`;
+            }
+            return;
+        }
+
+        formCrear.classList.remove('hidden');
+        avisoSinPermiso.classList.add('hidden');
+
+        if (usuarioActual.rol === 'ADMIN') {
+            descCrear.innerText = 'Como Admin podés crear usuarios de Gerente de local y ver la misma gestión del local.';
+            selectRol.innerHTML = `
+                <option value="GERENTE">Gerente de local</option>
+                <option value="CT_ASISTENTE">CT / Asistente</option>
+            `;
+        } else if (usuarioActual.rol === 'GERENTE') {
+            descCrear.innerText = 'Como Gerente de local podés crear usuarios de CT o Asistente.';
+            selectRol.innerHTML = `
+                <option value="CT_ASISTENTE">CT / Asistente</option>
+            `;
+        }
+    }
+
+    async function cargarUsuariosSiCorresponde() {
+        if (!usuarioActual || (usuarioActual.rol !== 'ADMIN' && usuarioActual.rol !== 'GERENTE')) {
+            return;
+        }
+        try {
+            const resp = await fetch(`/usuarios?rol=${encodeURIComponent(usuarioActual.rol)}`);
+            const data = await resp.json();
+            if (!resp.ok || !data.ok) return;
+
+            const tbody = document.getElementById('tabla-usuarios');
+            tbody.innerHTML = data.usuarios.map(u => {
+                const esActivo = u.activo !== false;
+                const puedeModificar = u.id !== usuarioActual.id &&
+                    (usuarioActual.rol === 'ADMIN' || u.rol === 'CT_ASISTENTE');
+
+                const rolTexto = u.rol === 'ADMIN'
+                    ? 'Admin'
+                    : u.rol === 'GERENTE'
+                        ? 'Gerente de local'
+                        : 'CT / Asistente';
+
+                return `
+                    <tr class="hover:bg-carbonDark/50 transition">
+                        <td class="py-3.5 px-6">
+                            <div class="font-semibold text-white">${u.nombre}</div>
+                            <div class="text-xs font-mono text-neutral-400">@${u.usuario}</div>
+                        </td>
+                        <td class="py-3.5 px-6 text-xs font-mono text-amber-300">${rolTexto}</td>
+                        <td class="py-3.5 px-6">
+                            ${esActivo
+                                ? `<span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold">ACTIVO</span>`
+                                : `<span class="bg-neutral-700/40 text-neutral-400 border border-neutral-600/40 px-3 py-1 rounded-full text-xs font-semibold">DE BAJA</span>`
+                            }
+                        </td>
+                        <td class="py-3.5 px-6">
+                            ${puedeModificar
+                                ? `<button type="button" onclick="toggleEstadoUsuario('${u.id}', ${!esActivo})" class="px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${esActivo
+                                    ? 'bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40 hover:bg-mostazaRed/25'
+                                    : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25'
+                                }">${esActivo ? 'Dar de baja' : 'Reactivar'}</button>`
+                                : `<span class="text-xs text-neutral-500">—</span>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('Error cargando usuarios:', err);
+        }
+    }
+
+    async function enviarCrearUsuario(event) {
+        event.preventDefault();
+        if (!usuarioActual) return;
+
+        const nombre = document.getElementById('nuevo-usr-nombre').value.trim();
+        const usuario = document.getElementById('nuevo-usr-login').value.trim();
+        const rol = document.getElementById('nuevo-usr-rol').value;
+        const pin = document.getElementById('nuevo-usr-pin').value.trim();
+        const msg = document.getElementById('mensaje-crear-usuario');
+        msg.classList.remove('hidden');
+
+        try {
+            const resp = await fetch('/usuarios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    solicitanteId: usuarioActual.id,
+                    nombre,
+                    usuario,
+                    rol,
+                    pin
+                })
+            });
+            const data = await resp.json();
+
+            if (!resp.ok || !data.ok) {
+                msg.className = "text-xs font-mono px-3.5 py-2.5 rounded-2xl border bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40";
+                msg.innerText = data.error || 'No se pudo crear el usuario.';
+                return;
+            }
+
+            msg.className = "text-xs font-mono px-3.5 py-2.5 rounded-2xl border bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+            msg.innerText = data.mensaje;
+            document.getElementById('nuevo-usr-nombre').value = '';
+            document.getElementById('nuevo-usr-login').value = '';
+            document.getElementById('nuevo-usr-pin').value = '';
+            await cargarUsuariosSiCorresponde();
+        } catch (err) {
+            msg.className = "text-xs font-mono px-3.5 py-2.5 rounded-2xl border bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40";
+            msg.innerText = 'Error de conexión al crear usuario.';
+        }
+    }
+
+    async function toggleEstadoUsuario(userId, nuevoActivo) {
+        if (!usuarioActual) return;
+        try {
+            const resp = await fetch(`/usuarios/${encodeURIComponent(userId)}/estado`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    solicitanteId: usuarioActual.id,
+                    activo: nuevoActivo
+                })
+            });
+            const data = await resp.json();
+            if (resp.ok && data.ok) {
+                await cargarUsuariosSiCorresponde();
+            } else {
+                alert(data.error || 'No se pudo actualizar el estado del usuario.');
+            }
+        } catch (err) {
+            alert('Error de conexión al cambiar estado.');
+        }
+    }
+
+    async function enviarCambioPin(event) {
+        event.preventDefault();
+        const msg = document.getElementById('mensaje-pin');
+        msg.classList.remove('hidden');
+
+        if (!usuarioActual) {
+            msg.className = "text-xs font-mono px-4 py-3 rounded-2xl border bg-amber-500/15 text-amber-400 border-amber-500/30";
+            msg.innerText = "Primero iniciá sesión con tu usuario y PIN actual.";
+            return;
+        }
+
+        const pinActual = document.getElementById('pin-actual').value.trim();
+        const pinNuevo = document.getElementById('pin-nuevo').value.trim();
+
+        try {
+            const resp = await fetch('/usuarios/pin', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    usuarioId: usuarioActual.id,
+                    pinActual,
+                    pinNuevo
+                })
+            });
+            const data = await resp.json();
+
+            if (!resp.ok || !data.ok) {
+                msg.className = "text-xs font-mono px-4 py-3 rounded-2xl border bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40";
+                msg.innerText = data.error || 'No se pudo cambiar el PIN.';
+                return;
+            }
+
+            msg.className = "text-xs font-mono px-4 py-3 rounded-2xl border bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+            msg.innerText = data.mensaje;
+            document.getElementById('pin-actual').value = '';
+            document.getElementById('pin-nuevo').value = '';
+        } catch (err) {
+            msg.className = "text-xs font-mono px-4 py-3 rounded-2xl border bg-mostazaRed/15 text-mostazaRed border-mostazaRed/40";
+            msg.innerText = 'Error de conexión al cambiar el PIN.';
+        }
     }
 
     function aplicarMotivoPreset() {
@@ -779,7 +1405,6 @@
         document.getElementById('kpi-anulados-hoy').innerText = anuladosHoy;
         document.getElementById('kpi-anulados-total').innerText = `Total anulados: ${anuladosTodos.length}`;
 
-        // US-22: Destacar visualmente cuando hay anulaciones en la jornada (ej: 3 o más)
         const cardAnulados = document.getElementById('card-kpi-anulados');
         const badgeAlerta = document.getElementById('badge-alerta-jornada');
         if (anuladosHoy >= 3) {
@@ -793,7 +1418,6 @@
         }
     }
 
-    // US-21 y US-27: Renderizar tabla de anulados y ranking por encargado
     function renderizarAnulados() {
         const anulados = ticketsCargados.filter(t => t.estado === 'ANULADO');
         const tbody = document.getElementById('tabla-anulados-detalle');
@@ -1036,6 +1660,7 @@
             renderizarUltimosTickets();
             renderizarFiltros();
             renderizarEstadisticas();
+            renderizarComparador();
             renderizarHistorialCompleto();
 
         } catch (error) {
@@ -1051,7 +1676,16 @@
     }
 
     window.onload = function() {
+        const hoy = obtenerHoyISOArgentina();
+        const ayer = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        const inputA = document.getElementById('comp-fecha-a');
+        const inputB = document.getElementById('comp-fecha-b');
+        if (inputA) inputA.value = ayer;
+        if (inputB) inputB.value = hoy;
+
+        actualizarPermisosUsuariosUI();
         cargarDatosAPI();
+        cargarBackupsLocales();
         setInterval(cargarDatosAPI, 5000);
     }
    </script>
