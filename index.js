@@ -4,8 +4,8 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
-const POCKETBASE_URL = 'http://127.0.0.1:8090';
+const PORT = process.env.PORT || 3000;
+const POCKETBASE_URL = process.env.POCKETBASE_URL || 'http://127.0.0.1:8090';
 const EVENTOS_FILE = path.join(__dirname, 'eventos_tickets.json');
 const USUARIOS_FILE = path.join(__dirname, 'usuarios_tickets.json');
 const BACKUPS_DIR = path.join(__dirname, 'backups');

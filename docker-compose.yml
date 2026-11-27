@@ -1,0 +1,33 @@
+services:
+  pocketbase:
+    image: alpine:3.20
+    container_name: pb-tickets
+    working_dir: /pb
+    command: ["./pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--migrationsDir=/pb/pb_migrations"]
+    volumes:
+      - ./pocketbase:/pb/pocketbase:ro
+      - ./pb_data:/pb/pb_data
+      - ./pb_migrations:/pb/pb_migrations
+    ports:
+      - "8091:8090"
+    networks:
+      - tickets-net
+    restart: unless-stopped
+
+  app-tickets:
+    build: .
+    container_name: app-tickets
+    environment:
+      - PORT=3000
+      - POCKETBASE_URL=http://pocketbase:8090
+    ports:
+      - "3001:3000"
+    depends_on:
+      - pocketbase
+    networks:
+      - tickets-net
+    restart: unless-stopped
+
+networks:
+  tickets-net:
+    driver: bridge

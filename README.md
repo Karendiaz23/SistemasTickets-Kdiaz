@@ -1,5 +1,3 @@
-# SistemasTickets-Kdiaz
-
 # Sistema de Validación de Tickets
 
 ## Breve descripción del proyecto
@@ -64,3 +62,29 @@ Manual de Usuario e Instrucciones de Deploy
    Confirmación / Cancelación: Presiona el Botón 4 para confirmar la entrega del ticket válido, o el Botón 5 para cancelar.
 
    Reinicio del sistema: Puedes reiniciar la ESP32 de forma remota escribiendo la letra r en el Monitor Serie (a 115200 baudios) o manteniendo presionado el Botón 5 durante 3 segundos directamente desde el gabinete.
+
+## Ejecucion con Docker Compose
+
+### Requisitos
+- Docker y Docker Compose instalados.
+
+### Levantar el proyecto desde cero
+```bash
+docker compose up -d --build
+```
+
+### Servicios y puertos
+- **API / Web (`app-tickets`):** `http://localhost:3001` (interno puerto `3000`, `node:18-alpine`)
+- **Base de datos (`pb-tickets`):** `http://localhost:8091/_/` (interno puerto `8090`, PocketBase)
+
+### Variables de entorno
+- `PORT`: puerto interno de la API (por defecto `3000`).
+- `POCKETBASE_URL`: URL de conexion a PocketBase (en Compose: `http://pocketbase:8090`).
+
+### Persistencia
+- Los datos y migraciones de PocketBase se persisten en `./pb_data` y `./pb_migrations` montados como volumenes en el contenedor `pb-tickets`.
+
+### Detener los servicios
+```bash
+docker compose down
+```
