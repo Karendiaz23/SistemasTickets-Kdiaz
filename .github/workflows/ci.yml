@@ -56,26 +56,21 @@ jobs:
   deploy:
     needs: build-and-push
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Deploy to VM over SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST_2 }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            set -e
-            cd ~/SistemasTickets-Kdiaz
-            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-            IMAGE_TAG="ghcr.io/karendiaz23/sistemastickets-kdiaz-app:sha-${SHORT_SHA}"
+      - name: Deploy on VM
+        run: |
+          set -e
+          cd ~/SistemasTickets-Kdiaz
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE_TAG="ghcr.io/karendiaz23/sistemastickets-kdiaz-app:sha-${SHORT_SHA}"
 
-            docker pull "$IMAGE_TAG"
-            docker tag "$IMAGE_TAG" sistemastickets-kdiaz-app-tickets
-            docker compose up -d --force-recreate app-tickets
-            docker compose ps
+          docker pull "$IMAGE_TAG"
+          docker tag "$IMAGE_TAG" sistemastickets-kdiaz-app-tickets
+          docker compose up -d --force-recreate app-tickets
+          docker compose ps
 
-            curl -fsS http://localhost:3001 >/dev/null
-            curl -fsS http://localhost:8091/api/health >/dev/null
-            echo "Deploy OK -> ${IMAGE_TAG}"
+          sleep 3
+          curl -fsS http://localhost:3001 >/dev/null
+          curl -fsS http://localhost:8091/api/health >/dev/null
+          echo "Deploy OK -> ${IMAGE_TAG}"
